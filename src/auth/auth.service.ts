@@ -1,10 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../common/services/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { AuthUser, JwtPayload } from '../common/interfaces/auth.interface';
 import { LoginDto } from './dto/login.dto';
-import { AuthResponseDto } from './dto/auth-response.dto';
+import { AuthResponseDto, UserDto } from './dto/auth-response.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,10 +20,11 @@ export class AuthService {
       where: { username },
     });
 
-    if (user && await bcrypt.compare(password, user.password)) {
+    if (user && user.isActive && await bcrypt.compare(password, user.password)) {
       return {
         id: user.id,
         username: user.username,
+        role: user.role,
         isAuthenticated: true,
       };
     }
@@ -37,7 +40,8 @@ export class AuthService {
 
     const payload: JwtPayload = { 
       username: user.username, 
-      sub: user.id 
+      sub: user.id,
+      role: user.role
     };
 
     // Update user authentication status
@@ -49,6 +53,7 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
       username: user.username,
+      role: user.role,
       isAuthenticated: true,
     };
   }
@@ -62,12 +67,17 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
-  async getProfile(userId: number): Promise<AuthUser> {
+  async getProfile(userId: number): Promise<UserDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
         username: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
         isAuthenticated: true,
       },
     });
@@ -77,5 +87,164 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  // User management methods
+  async createUser(createUserDto: CreateUserDto): Promise<UserDto> {
+    // Check if username already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { username: createUserDto.username },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Username already exists');
+    }
+
+    // Check if email already exists (if provided)
+    if (createUserDto.email) {
+      const existingEmail = await this.prisma.user.findUnique({
+        where: { email: createUserDto.email },
+      });
+
+      if (existingEmail) {
+        throw new ConflictException('Email already exists');
+      }
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    // Create user
+    const user = await this.prisma.user.create({
+      data: {
+        ...createUserDto,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        isAuthenticated: true,
+      },
+    });
+
+    return user;
+  }
+
+  async getAllUsers(): Promise<UserDto[]> {
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        isAuthenticated: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return users;
+  }
+
+  async getUserById(id: number): Promise<UserDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        isAuthenticated: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<UserDto> {
+    // Check if user exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check if username is being updated and doesn't conflict
+    if (updateUserDto.username && updateUserDto.username !== existingUser.username) {
+      const usernameExists = await this.prisma.user.findUnique({
+        where: { username: updateUserDto.username },
+      });
+
+      if (usernameExists) {
+        throw new ConflictException('Username already exists');
+      }
+    }
+
+    // Check if email is being updated and doesn't conflict
+    if (updateUserDto.email && updateUserDto.email !== existingUser.email) {
+      const emailExists = await this.prisma.user.findUnique({
+        where: { email: updateUserDto.email },
+      });
+
+      if (emailExists) {
+        throw new ConflictException('Email already exists');
+      }
+    }
+
+    // Hash password if being updated
+    const updateData: any = { ...updateUserDto };
+    if (updateUserDto.password) {
+      updateData.password = await bcrypt.hash(updateUserDto.password, 10);
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        isAuthenticated: true,
+      },
+    });
+
+    return user;
+  }
+
+  async deleteUser(id: number): Promise<{ message: string }> {
+    // Check if user exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.prisma.user.delete({
+      where: { id },
+    });
+
+    return { message: 'User deleted successfully' };
   }
 }

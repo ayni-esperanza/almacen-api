@@ -11,13 +11,25 @@ datasource db {
 }
 
 // === AUTH MODELS ===
+enum UserRole {
+  JEFE
+  ASISTENTE
+  GERENTE
+  AYUDANTE
+}
+
 model User {
-  id           Int @id @default(autoincrement())
-  username     String @unique
-  password     String
+  id              Int @id @default(autoincrement())
+  username        String @unique
+  password        String
+  email           String? @unique
+  firstName       String?
+  lastName        String?
+  role            UserRole @default(AYUDANTE)
+  isActive        Boolean @default(true)
   isAuthenticated Boolean @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@map("users")
 }

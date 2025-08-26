@@ -21,15 +21,19 @@ import { CreateExitDto } from './dto/create-exit.dto';
 import { UpdateExitQuantityDto } from './dto/update-exit-quantity.dto';
 import { MovementEntryResponseDto, MovementExitResponseDto } from './dto/movement-response.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/decorators/permissions.decorator';
+import { Permission } from '../common/enums/permissions.enum';
 
 @ApiTags('Movements')
 @Controller('movements')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth()
 export class MovementsController {
   constructor(private readonly movementsService: MovementsService) {}
 
   @Post('entries')
+  @RequirePermissions(Permission.MOVEMENTS_CREATE)
   @ApiOperation({ summary: 'Create a new entry movement' })
   @ApiResponse({
     status: 201,
@@ -45,6 +49,7 @@ export class MovementsController {
   }
 
   @Post('exits')
+  @RequirePermissions(Permission.MOVEMENTS_CREATE)
   @ApiOperation({ summary: 'Create a new exit movement' })
   @ApiResponse({
     status: 201,
@@ -64,6 +69,7 @@ export class MovementsController {
   }
 
   @Get('entries')
+  @RequirePermissions(Permission.MOVEMENTS_READ)
   @ApiOperation({ summary: 'Get all entry movements' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
   @ApiResponse({
@@ -76,6 +82,7 @@ export class MovementsController {
   }
 
   @Get('exits')
+  @RequirePermissions(Permission.MOVEMENTS_READ)
   @ApiOperation({ summary: 'Get all exit movements' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
   @ApiResponse({
@@ -88,6 +95,7 @@ export class MovementsController {
   }
 
   @Get('search')
+  @RequirePermissions(Permission.MOVEMENTS_READ)
   @ApiOperation({ summary: 'Search all movements' })
   @ApiQuery({ name: 'q', required: true, description: 'Search query' })
   @ApiResponse({
@@ -102,6 +110,7 @@ export class MovementsController {
   }
 
   @Patch('exits/:id/quantity')
+  @RequirePermissions(Permission.MOVEMENTS_UPDATE)
   @ApiOperation({ summary: 'Update exit movement quantity' })
   @ApiResponse({
     status: 200,

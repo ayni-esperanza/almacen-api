@@ -17,10 +17,14 @@ import { ReportsService } from './reports.service';
 import { ExitReportResponseDto } from './dto/report-response.dto';
 import { GenerateReportDto } from './dto/generate-report.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/decorators/permissions.decorator';
+import { Permission } from '../common/enums/permissions.enum';
 
 @ApiTags('Reports')
 @Controller('reports')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequirePermissions(Permission.REPORTS_READ)
 @ApiBearerAuth()
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
@@ -96,6 +100,7 @@ export class ReportsController {
   }
 
   @Post('generate')
+  @RequirePermissions(Permission.REPORTS_GENERATE)
   @ApiOperation({ summary: 'Generate custom report' })
   @ApiResponse({
     status: 201,

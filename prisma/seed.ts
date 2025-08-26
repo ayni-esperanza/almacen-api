@@ -1,21 +1,63 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Crear usuario admin
-  const hashedPassword = await bcrypt.hash('admin123', 10);
-  
-  await prisma.user.upsert({
-    where: { username: 'admin' },
-    update: {},
-    create: {
+  // Crear usuarios por defecto con diferentes roles
+  const users = [
+    {
       username: 'admin',
-      password: hashedPassword,
-      isAuthenticated: false,
+      password: 'admin123',
+      email: 'admin@ayni.com',
+      firstName: 'Administrador',
+      lastName: 'Sistema',
+      role: UserRole.JEFE,
     },
-  });
+    {
+      username: 'gerente',
+      password: 'gerente123',
+      email: 'gerente@ayni.com',
+      firstName: 'Juan',
+      lastName: 'Gerente',
+      role: UserRole.GERENTE,
+    },
+    {
+      username: 'asistente',
+      password: 'asistente123',
+      email: 'asistente@ayni.com',
+      firstName: 'María',
+      lastName: 'Asistente',
+      role: UserRole.ASISTENTE,
+    },
+    {
+      username: 'ayudante',
+      password: 'ayudante123',
+      email: 'ayudante@ayni.com',
+      firstName: 'Carlos',
+      lastName: 'Ayudante',
+      role: UserRole.AYUDANTE,
+    },
+  ];
+
+  for (const userData of users) {
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    
+    await prisma.user.upsert({
+      where: { username: userData.username },
+      update: {},
+      create: {
+        username: userData.username,
+        password: hashedPassword,
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        role: userData.role,
+        isActive: true,
+        isAuthenticated: false,
+      },
+    });
+  }
 
   // Crear áreas predefinidas
   const areas = [
