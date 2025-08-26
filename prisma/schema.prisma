@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// === AUTH MODELS ===
+model User {
+  id           Int @id @default(autoincrement())
+  username     String @unique
+  password     String
+  isAuthenticated Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+// === PRODUCT/INVENTORY MODELS ===
+model Product {
+  id            Int @id @default(autoincrement())
+  codigo        String @unique
+  descripcion   String
+  costoUnitario Float
+  ubicacion     String
+  entradas      Int    @default(0)
+  salidas       Int    @default(0) 
+  stockActual   Int    @default(0)
+  unidadMedida  String
+  proveedor     String
+  costoTotal    Float  @default(0)
+  categoria     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  movementEntries MovementEntry[]
+  movementExits   MovementExit[]
+
+  @@map("products")
+}
+
+// === MOVEMENT MODELS ===
+model MovementEntry {
+  id             Int @id @default(autoincrement())
+  fecha          String // Format: "DD/MM/YYYY"
+  codigoProducto String
+  descripcion    String
+  precioUnitario Float
+  cantidad       Int
+  responsable    String?
+  area          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  product       Product @relation(fields: [codigoProducto], references: [codigo])
+
+  @@map("movement_entries")
+}
+
+model MovementExit {
+  id             Int @id @default(autoincrement())
+  fecha          String // Format: "DD/MM/YYYY"
+  codigoProducto String
+  descripcion    String
+  precioUnitario Float
+  cantidad       Int
+  responsable    String?
+  area          String?
+  proyecto      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  product       Product @relation(fields: [codigoProducto], references: [codigo])
+
+  @@map("movement_exits")
+}
+
+// === EQUIPMENT MODELS ===
+enum EstadoEquipo {
+  Bueno
+  Regular
+  Malo
+  En_Reparacion
+  Danado
+}
+
+model EquipmentReport {
+  id              Int @id @default(autoincrement())
+  equipo          String
+  serieCodigo     String
+  cantidad        Int
+  estadoEquipo    EstadoEquipo
+  responsable     String
+  fechaSalida     String
+  horaSalida      String
+  areaProyecto    String
+  firma           String
+  fechaRetorno    String?
+  horaRetorno     String?
+  estadoRetorno   EstadoEquipo?
+  firmaRetorno    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("equipment_reports")
+}
+
+// === CONFIGURATION MODELS ===
+model Area {
+  id     Int @id @default(autoincrement())
+  nombre String @unique
+
+  @@map("areas")
+}
