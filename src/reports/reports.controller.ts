@@ -4,7 +4,9 @@ import {
   Post,
   Body,
   Query,
+  Param,
   UseGuards,
+  Res,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -13,6 +15,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { ReportsService } from './reports.service';
 import { ExitReportResponseDto } from './dto/report-response.dto';
 import { GenerateReportDto } from './dto/generate-report.dto';
@@ -108,5 +111,219 @@ export class ReportsController {
   })
   generateReport(@Body() generateReportDto: GenerateReportDto): Promise<any> {
     return this.reportsService.generateReport(generateReportDto);
+  }
+
+  // === STOCK ALERTS ENDPOINTS ===
+
+  @Get('stock-alerts')
+  @ApiOperation({ summary: 'Get stock alerts' })
+  @ApiQuery({ name: 'categoria', required: false, description: 'Filter by category' })
+  @ApiQuery({ name: 'ubicacion', required: false, description: 'Filter by location' })
+  @ApiQuery({ name: 'estado', required: false, description: 'Filter by status' })
+  @ApiQuery({ name: 'soloCriticos', required: false, description: 'Show only critical alerts' })
+  @ApiResponse({
+    status: 200,
+    description: 'Stock alerts retrieved successfully',
+  })
+  getStockAlerts(
+    @Query('categoria') categoria?: string,
+    @Query('ubicacion') ubicacion?: string,
+    @Query('estado') estado?: string,
+    @Query('soloCriticos') soloCriticos?: string,
+  ): Promise<any[]> {
+    const filters = {
+      categoria,
+      ubicacion,
+      estado,
+      mostrarSoloCriticos: soloCriticos === 'true',
+    };
+    return this.reportsService.getStockAlerts(filters);
+  }
+
+  @Get('stock-alerts/:id')
+  @ApiOperation({ summary: 'Get stock alert by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Stock alert retrieved successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Stock alert not found',
+  })
+  getStockAlert(@Param('id') id: string): Promise<any> {
+    return this.reportsService.getStockAlert(id);
+  }
+
+  @Get('stock-alerts/statistics')
+  @ApiOperation({ summary: 'Get stock alert statistics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Stock alert statistics retrieved successfully',
+  })
+  getStockAlertStatistics(): Promise<any> {
+    return this.reportsService.getStockAlertStatistics();
+  }
+
+  // === EXPENSE REPORTS ENDPOINTS ===
+
+  @Get('expenses')
+  @ApiOperation({ summary: 'Get expense reports' })
+  @ApiQuery({ name: 'fechaInicio', required: false, description: 'Start date' })
+  @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
+  @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
+  @ApiQuery({ name: 'proyecto', required: false, description: 'Filter by project' })
+  @ApiQuery({ name: 'tipoReporte', required: false, description: 'Report type' })
+  @ApiResponse({
+    status: 200,
+    description: 'Expense reports retrieved successfully',
+  })
+  getExpenseReports(
+    @Query('fechaInicio') fechaInicio?: string,
+    @Query('fechaFin') fechaFin?: string,
+    @Query('area') area?: string,
+    @Query('proyecto') proyecto?: string,
+    @Query('tipoReporte') tipoReporte?: string,
+  ): Promise<any[]> {
+    const filters = {
+      fechaInicio,
+      fechaFin,
+      area,
+      proyecto,
+      tipoReporte,
+    };
+    return this.reportsService.getExpenseReports(filters);
+  }
+
+  @Get('expenses/monthly')
+  @ApiOperation({ summary: 'Get monthly expense data' })
+  @ApiQuery({ name: 'fechaInicio', required: false, description: 'Start date' })
+  @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
+  @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
+  @ApiQuery({ name: 'proyecto', required: false, description: 'Filter by project' })
+  @ApiQuery({ name: 'tipoReporte', required: false, description: 'Report type' })
+  @ApiResponse({
+    status: 200,
+    description: 'Monthly expense data retrieved successfully',
+  })
+  getMonthlyExpenseData(
+    @Query('fechaInicio') fechaInicio?: string,
+    @Query('fechaFin') fechaFin?: string,
+    @Query('area') area?: string,
+    @Query('proyecto') proyecto?: string,
+    @Query('tipoReporte') tipoReporte?: string,
+  ): Promise<any[]> {
+    const filters = {
+      fechaInicio,
+      fechaFin,
+      area,
+      proyecto,
+      tipoReporte,
+    };
+    return this.reportsService.getMonthlyExpenseData(filters);
+  }
+
+  @Get('expenses/area')
+  @ApiOperation({ summary: 'Get area expense data' })
+  @ApiQuery({ name: 'fechaInicio', required: false, description: 'Start date' })
+  @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
+  @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
+  @ApiQuery({ name: 'proyecto', required: false, description: 'Filter by project' })
+  @ApiQuery({ name: 'tipoReporte', required: false, description: 'Report type' })
+  @ApiResponse({
+    status: 200,
+    description: 'Area expense data retrieved successfully',
+  })
+  getAreaExpenseData(
+    @Query('fechaInicio') fechaInicio?: string,
+    @Query('fechaFin') fechaFin?: string,
+    @Query('area') area?: string,
+    @Query('proyecto') proyecto?: string,
+    @Query('tipoReporte') tipoReporte?: string,
+  ): Promise<any[]> {
+    const filters = {
+      fechaInicio,
+      fechaFin,
+      area,
+      proyecto,
+      tipoReporte,
+    };
+    return this.reportsService.getAreaExpenseData(filters);
+  }
+
+  // === PDF EXPORT ENDPOINTS ===
+
+  @Get('stock-alerts/export')
+  @RequirePermissions(Permission.REPORTS_GENERATE)
+  @ApiOperation({ summary: 'Export stock alerts to PDF' })
+  @ApiQuery({ name: 'categoria', required: false, description: 'Filter by category' })
+  @ApiQuery({ name: 'ubicacion', required: false, description: 'Filter by location' })
+  @ApiQuery({ name: 'estado', required: false, description: 'Filter by status' })
+  @ApiQuery({ name: 'soloCriticos', required: false, description: 'Show only critical alerts' })
+  @ApiResponse({
+    status: 200,
+    description: 'PDF file generated successfully',
+  })
+  async exportStockAlertsPDF(
+    @Res() res: Response,
+    @Query('categoria') categoria?: string,
+    @Query('ubicacion') ubicacion?: string,
+    @Query('estado') estado?: string,
+    @Query('soloCriticos') soloCriticos?: string,
+  ): Promise<void> {
+    const filters = {
+      categoria,
+      ubicacion,
+      estado,
+      mostrarSoloCriticos: soloCriticos === 'true',
+    };
+    
+    const pdfBuffer = await this.reportsService.exportStockAlertsPDF(filters);
+    
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="alertas-stock-${new Date().toISOString().split('T')[0]}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+    
+    res.send(pdfBuffer);
+  }
+
+  @Get('expenses/export')
+  @RequirePermissions(Permission.REPORTS_GENERATE)
+  @ApiOperation({ summary: 'Export expense report to PDF' })
+  @ApiQuery({ name: 'fechaInicio', required: false, description: 'Start date' })
+  @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
+  @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
+  @ApiQuery({ name: 'proyecto', required: false, description: 'Filter by project' })
+  @ApiQuery({ name: 'tipoReporte', required: false, description: 'Report type' })
+  @ApiResponse({
+    status: 200,
+    description: 'PDF file generated successfully',
+  })
+  async exportExpenseReportPDF(
+    @Res() res: Response,
+    @Query('fechaInicio') fechaInicio?: string,
+    @Query('fechaFin') fechaFin?: string,
+    @Query('area') area?: string,
+    @Query('proyecto') proyecto?: string,
+    @Query('tipoReporte') tipoReporte?: string,
+  ): Promise<void> {
+    const filters = {
+      fechaInicio,
+      fechaFin,
+      area,
+      proyecto,
+      tipoReporte,
+    };
+    
+    const pdfBuffer = await this.reportsService.exportExpenseReportPDF(filters);
+    
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="reporte-gastos-${new Date().toISOString().split('T')[0]}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+    
+    res.send(pdfBuffer);
   }
 }

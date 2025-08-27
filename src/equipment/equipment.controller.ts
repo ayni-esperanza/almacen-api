@@ -22,15 +22,19 @@ import { UpdateEquipmentDto } from './dto/update-equipment.dto';
 import { ReturnEquipmentDto } from './dto/return-equipment.dto';
 import { EquipmentResponseDto } from './dto/equipment-response.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/decorators/permissions.decorator';
+import { Permission } from '../common/enums/permissions.enum';
 
 @ApiTags('Equipment')
 @Controller('equipment')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth()
 export class EquipmentController {
   constructor(private readonly equipmentService: EquipmentService) {}
 
   @Post()
+  @RequirePermissions(Permission.EQUIPMENT_CREATE)
   @ApiOperation({ summary: 'Create new equipment report' })
   @ApiResponse({
     status: 201,
@@ -42,6 +46,7 @@ export class EquipmentController {
   }
 
   @Get()
+  @RequirePermissions(Permission.EQUIPMENT_READ)
   @ApiOperation({ summary: 'Get all equipment reports' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
   @ApiResponse({
@@ -54,6 +59,7 @@ export class EquipmentController {
   }
 
   @Get(':id')
+  @RequirePermissions(Permission.EQUIPMENT_READ)
   @ApiOperation({ summary: 'Get equipment report by ID' })
   @ApiResponse({
     status: 200,
@@ -69,6 +75,7 @@ export class EquipmentController {
   }
 
   @Patch(':id')
+  @RequirePermissions(Permission.EQUIPMENT_UPDATE)
   @ApiOperation({ summary: 'Update equipment report' })
   @ApiResponse({
     status: 200,
@@ -87,6 +94,7 @@ export class EquipmentController {
   }
 
   @Delete(':id')
+  @RequirePermissions(Permission.EQUIPMENT_DELETE)
   @ApiOperation({ summary: 'Delete equipment report' })
   @ApiResponse({
     status: 200,
@@ -101,6 +109,7 @@ export class EquipmentController {
   }
 
   @Patch(':id/return')
+  @RequirePermissions(Permission.EQUIPMENT_UPDATE)
   @ApiOperation({ summary: 'Register equipment return' })
   @ApiResponse({
     status: 200,

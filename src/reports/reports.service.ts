@@ -2,10 +2,43 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/services/prisma.service';
 import { ExitReportResponseDto, ExitReportDataDto, ReportSummaryDto } from './dto/report-response.dto';
 import { GenerateReportDto, ReportType } from './dto/generate-report.dto';
+import { PdfExportService } from '../common/services/pdf-export.service';
+
+// Interfaces para alertas de stock
+interface StockAlert {
+  id: string;
+  codigo: string;
+  descripcion: string;
+  stockActual: number;
+  stockMinimo: number;
+  ubicacion: string;
+  categoria: string;
+  proveedor: string;
+  ultimaActualizacion: string;
+  estado: 'critico' | 'bajo' | 'normal';
+}
+
+interface StockAlertFilters {
+  categoria?: string;
+  ubicacion?: string;
+  estado?: string;
+  mostrarSoloCriticos?: boolean;
+}
+
+interface StockAlertStatistics {
+  total: number;
+  criticos: number;
+  bajos: number;
+  totalStock: number;
+  stockMinimo: number;
+}
 
 @Injectable()
 export class ReportsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private pdfExportService: PdfExportService,
+  ) {}
 
   async getExitsReport(
     startDate?: string,
@@ -257,5 +290,263 @@ export class ReportsService {
       'Danado': 'Dañado'
     };
     return mapping[estado] || estado;
+  }
+
+  // === STOCK ALERTS METHODS ===
+  
+  async getStockAlerts(filters: StockAlertFilters): Promise<StockAlert[]> {
+    const where: any = {};
+    
+    // Aplicar filtros
+    if (filters.categoria) {
+      where.categoria = { contains: filters.categoria, mode: 'insensitive' };
+    }
+    
+    if (filters.ubicacion) {
+      where.ubicacion = { contains: filters.ubicacion, mode: 'insensitive' };
+    }
+
+    // Obtener todos los productos
+    const products = await this.prisma.product.findMany({
+      where,
+      orderBy: { codigo: 'asc' },
+    });
+
+    // Convertir a alertas de stock
+    const alerts: StockAlert[] = products.map(product => {
+      const stockMinimo = 10; // Stock mínimo por defecto
+      let estado: 'critico' | 'bajo' | 'normal' = 'normal';
+      
+      if (product.stockActual === 0) {
+        estado = 'critico';
+      } else if (product.stockActual < stockMinimo) {
+        estado = product.stockActual <= 3 ? 'critico' : 'bajo';
+      }
+
+      return {
+        id: product.id.toString(),
+        codigo: product.codigo,
+        descripcion: product.descripcion,
+        stockActual: product.stockActual,
+        stockMinimo,
+        ubicacion: product.ubicacion,
+        categoria: product.categoria || 'Sin categoría',
+        proveedor: product.proveedor,
+        ultimaActualizacion: product.updatedAt.toISOString().split('T')[0],
+        estado,
+      };
+    });
+
+    // Aplicar filtros adicionales
+    let filteredAlerts = alerts;
+    
+    if (filters.estado) {
+      filteredAlerts = filteredAlerts.filter(alert => alert.estado === filters.estado);
+    }
+    
+    if (filters.mostrarSoloCriticos) {
+      filteredAlerts = filteredAlerts.filter(alert => alert.estado === 'critico');
+    }
+
+    return filteredAlerts;
+  }
+
+  async getStockAlert(id: string): Promise<StockAlert | null> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!product) {
+      return null;
+    }
+
+    const stockMinimo = 10;
+    let estado: 'critico' | 'bajo' | 'normal' = 'normal';
+    
+    if (product.stockActual === 0) {
+      estado = 'critico';
+    } else if (product.stockActual < stockMinimo) {
+      estado = product.stockActual <= 3 ? 'critico' : 'bajo';
+    }
+
+    return {
+      id: product.id.toString(),
+      codigo: product.codigo,
+      descripcion: product.descripcion,
+      stockActual: product.stockActual,
+      stockMinimo,
+      ubicacion: product.ubicacion,
+      categoria: product.categoria || 'Sin categoría',
+      proveedor: product.proveedor,
+      ultimaActualizacion: product.updatedAt.toISOString().split('T')[0],
+      estado,
+    };
+  }
+
+  async getStockAlertStatistics(): Promise<StockAlertStatistics> {
+    const products = await this.prisma.product.findMany();
+    const stockMinimo = 10;
+
+    let total = 0;
+    let criticos = 0;
+    let bajos = 0;
+    let totalStock = 0;
+    let stockMinimoTotal = 0;
+
+    products.forEach(product => {
+      totalStock += product.stockActual;
+      stockMinimoTotal += stockMinimo;
+
+      if (product.stockActual === 0) {
+        criticos++;
+        total++;
+      } else if (product.stockActual < stockMinimo) {
+        if (product.stockActual <= 3) {
+          criticos++;
+        } else {
+          bajos++;
+        }
+        total++;
+      }
+    });
+
+    return {
+      total,
+      criticos,
+      bajos,
+      totalStock,
+      stockMinimo: stockMinimoTotal,
+    };
+  }
+
+  // === EXPENSE REPORTS METHODS ===
+
+  async getExpenseReports(filters: any): Promise<any[]> {
+    const where: any = {};
+
+    // Aplicar filtros de fecha
+    if (filters.fechaInicio || filters.fechaFin) {
+      where.fecha = {};
+      if (filters.fechaInicio) {
+        where.fecha.gte = filters.fechaInicio;
+      }
+      if (filters.fechaFin) {
+        where.fecha.lte = filters.fechaFin;
+      }
+    }
+
+    if (filters.area) {
+      where.area = { contains: filters.area, mode: 'insensitive' };
+    }
+
+    if (filters.proyecto) {
+      where.proyecto = { contains: filters.proyecto, mode: 'insensitive' };
+    }
+
+    // Obtener movimientos de salida (gastos)
+    const exits = await this.prisma.movementExit.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return exits.map(exit => ({
+      id: exit.id,
+      fecha: exit.fecha,
+      codigoProducto: exit.codigoProducto,
+      descripcion: exit.descripcion,
+      precioUnitario: exit.precioUnitario,
+      cantidad: exit.cantidad,
+      total: exit.cantidad * exit.precioUnitario,
+      responsable: exit.responsable,
+      area: exit.area,
+      proyecto: exit.proyecto,
+    }));
+  }
+
+  async getMonthlyExpenseData(filters: any): Promise<any[]> {
+    const exits = await this.getExpenseReports(filters);
+    
+    // Agrupar por mes
+    const monthlyData = new Map<string, { gasto: number; movimientos: number }>();
+    
+    exits.forEach(exit => {
+      const month = exit.fecha.substring(3, 10); // DD/MM/YYYY -> MM/YYYY
+      const existing = monthlyData.get(month) || { gasto: 0, movimientos: 0 };
+      
+      monthlyData.set(month, {
+        gasto: existing.gasto + exit.total,
+        movimientos: existing.movimientos + 1,
+      });
+    });
+
+    return Array.from(monthlyData.entries()).map(([mes, data]) => ({
+      mes,
+      gasto: data.gasto,
+      movimientos: data.movimientos,
+    }));
+  }
+
+  async getAreaExpenseData(filters: any): Promise<any[]> {
+    const exits = await this.getExpenseReports(filters);
+    
+    // Agrupar por área
+    const areaData = new Map<string, { 
+      totalGasto: number; 
+      cantidadMovimientos: number;
+      proyectos: Map<string, { totalGasto: number; cantidadMovimientos: number }>;
+    }>();
+    
+    exits.forEach(exit => {
+      const area = exit.area || 'Sin área';
+      const proyecto = exit.proyecto || 'Sin proyecto';
+      
+      let areaInfo = areaData.get(area);
+      if (!areaInfo) {
+        areaInfo = {
+          totalGasto: 0,
+          cantidadMovimientos: 0,
+          proyectos: new Map(),
+        };
+        areaData.set(area, areaInfo);
+      }
+      
+      areaInfo.totalGasto += exit.total;
+      areaInfo.cantidadMovimientos += 1;
+      
+      let proyectoInfo = areaInfo.proyectos.get(proyecto);
+      if (!proyectoInfo) {
+        proyectoInfo = { totalGasto: 0, cantidadMovimientos: 0 };
+        areaInfo.proyectos.set(proyecto, proyectoInfo);
+      }
+      
+      proyectoInfo.totalGasto += exit.total;
+      proyectoInfo.cantidadMovimientos += 1;
+    });
+
+    return Array.from(areaData.entries()).map(([area, data]) => ({
+      area,
+      totalGasto: data.totalGasto,
+      cantidadMovimientos: data.cantidadMovimientos,
+      proyectos: Array.from(data.proyectos.entries()).map(([proyecto, proyectoData]) => ({
+        proyecto,
+        totalGasto: proyectoData.totalGasto,
+        cantidadMovimientos: proyectoData.cantidadMovimientos,
+      })),
+    }));
+  }
+
+  // === PDF EXPORT METHODS ===
+
+  async exportStockAlertsPDF(filters: StockAlertFilters): Promise<Buffer> {
+    const alerts = await this.getStockAlerts(filters);
+    const statistics = await this.getStockAlertStatistics();
+    
+    return this.pdfExportService.generateStockAlertsPDF(alerts, statistics);
+  }
+
+  async exportExpenseReportPDF(filters: any): Promise<Buffer> {
+    const data = await this.getExpenseReports(filters);
+    
+    return this.pdfExportService.generateExpenseReportPDF(data, filters);
   }
 }

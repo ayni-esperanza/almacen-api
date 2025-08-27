@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Delete, Body, Param, UseGuards, HttpCode, HttpStatus, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Delete, Body, Param, UseGuards, HttpCode, HttpStatus, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -103,7 +103,7 @@ export class AuthController {
     return this.authService.createUser(createUserDto);
   }
 
-  @Put('users/:id')
+  @Patch('users/:id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions(Permission.USERS_UPDATE)
   @ApiBearerAuth()

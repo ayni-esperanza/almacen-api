@@ -21,15 +21,19 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/decorators/permissions.decorator';
+import { Permission } from '../common/enums/permissions.enum';
 
 @ApiTags('Inventory')
 @Controller('inventory')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth()
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
   @Post('products')
+  @RequirePermissions(Permission.INVENTORY_CREATE)
   @ApiOperation({ summary: 'Create a new product' })
   @ApiResponse({
     status: 201,
@@ -45,6 +49,7 @@ export class InventoryController {
   }
 
   @Get('products')
+  @RequirePermissions(Permission.INVENTORY_READ)
   @ApiOperation({ summary: 'Get all products' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
   @ApiResponse({
@@ -57,6 +62,7 @@ export class InventoryController {
   }
 
   @Get('areas')
+  @RequirePermissions(Permission.INVENTORY_READ)
   @ApiOperation({ summary: 'Get all available areas' })
   @ApiResponse({
     status: 200,
@@ -67,6 +73,7 @@ export class InventoryController {
   }
 
   @Get('products/search')
+  @RequirePermissions(Permission.INVENTORY_READ)
   @ApiOperation({ summary: 'Search products' })
   @ApiQuery({ name: 'q', required: true, description: 'Search query' })
   @ApiResponse({
@@ -79,6 +86,7 @@ export class InventoryController {
   }
 
   @Get('products/:id')
+  @RequirePermissions(Permission.INVENTORY_READ)
   @ApiOperation({ summary: 'Get product by ID' })
   @ApiResponse({
     status: 200,
@@ -94,6 +102,7 @@ export class InventoryController {
   }
 
   @Patch('products/:id')
+  @RequirePermissions(Permission.INVENTORY_UPDATE)
   @ApiOperation({ summary: 'Update product' })
   @ApiResponse({
     status: 200,
@@ -116,6 +125,7 @@ export class InventoryController {
   }
 
   @Delete('products/:id')
+  @RequirePermissions(Permission.INVENTORY_DELETE)
   @ApiOperation({ summary: 'Delete product' })
   @ApiResponse({
     status: 200,
