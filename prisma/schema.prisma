@@ -38,14 +38,16 @@ model User {
 model Product {
   id            Int @id @default(autoincrement())
   codigo        String @unique
-  descripcion   String
+  nombre        String
   costoUnitario Float
   ubicacion     String
   entradas      Int    @default(0)
   salidas       Int    @default(0) 
   stockActual   Int    @default(0)
+  stockMinimo   Int    @default(0)
   unidadMedida  String
   proveedor     String
+  marca         String?
   costoTotal    Float  @default(0)
   categoria     String?
   createdAt     DateTime @default(now())

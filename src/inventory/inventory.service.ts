@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../common/services/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -8,14 +12,18 @@ import { ProductResponseDto } from './dto/product-response.dto';
 export class InventoryService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createProductDto: CreateProductDto): Promise<ProductResponseDto> {
+  async create(
+    createProductDto: CreateProductDto,
+  ): Promise<ProductResponseDto> {
     // Check if product code already exists
     const existingProduct = await this.prisma.product.findUnique({
       where: { codigo: createProductDto.codigo },
     });
 
     if (existingProduct) {
-      throw new ConflictException(`Product with code ${createProductDto.codigo} already exists`);
+      throw new ConflictException(
+        `Product with code ${createProductDto.codigo} already exists`,
+      );
     }
 
     // Calculate total cost
@@ -35,6 +43,7 @@ export class InventoryService {
     return {
       ...product,
       categoria: product.categoria || undefined,
+      marca: product.marca || undefined,
     };
   }
 
@@ -43,8 +52,9 @@ export class InventoryService {
       ? {
           OR: [
             { codigo: { contains: search, mode: 'insensitive' as const } },
-            { descripcion: { contains: search, mode: 'insensitive' as const } },
+            { nombre: { contains: search, mode: 'insensitive' as const } },
             { proveedor: { contains: search, mode: 'insensitive' as const } },
+            { marca: { contains: search, mode: 'insensitive' as const } },
           ],
         }
       : {};
@@ -54,9 +64,10 @@ export class InventoryService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return products.map(product => ({
+    return products.map((product) => ({
       ...product,
       categoria: product.categoria || undefined,
+      marca: product.marca || undefined,
     }));
   }
 
@@ -72,6 +83,7 @@ export class InventoryService {
     return {
       ...product,
       categoria: product.categoria || undefined,
+      marca: product.marca || undefined,
     };
   }
 
@@ -87,28 +99,42 @@ export class InventoryService {
     return {
       ...product,
       categoria: product.categoria || undefined,
+      marca: product.marca || undefined,
     };
   }
 
-  async update(id: number, updateProductDto: UpdateProductDto): Promise<ProductResponseDto> {
+  async update(
+    id: number,
+    updateProductDto: UpdateProductDto,
+  ): Promise<ProductResponseDto> {
     const existingProduct = await this.findOne(id);
 
     // If codigo is being updated, check for conflicts
-    if (updateProductDto.codigo && updateProductDto.codigo !== existingProduct.codigo) {
+    if (
+      updateProductDto.codigo &&
+      updateProductDto.codigo !== existingProduct.codigo
+    ) {
       const conflictingProduct = await this.prisma.product.findUnique({
         where: { codigo: updateProductDto.codigo },
       });
 
       if (conflictingProduct) {
-        throw new ConflictException(`Product with code ${updateProductDto.codigo} already exists`);
+        throw new ConflictException(
+          `Product with code ${updateProductDto.codigo} already exists`,
+        );
       }
     }
 
     // Calculate new total cost if relevant fields are updated
     let costoTotal = existingProduct.costoTotal;
-    if (updateProductDto.stockActual !== undefined || updateProductDto.costoUnitario !== undefined) {
-      const newStockActual = updateProductDto.stockActual ?? existingProduct.stockActual;
-      const newCostoUnitario = updateProductDto.costoUnitario ?? existingProduct.costoUnitario;
+    if (
+      updateProductDto.stockActual !== undefined ||
+      updateProductDto.costoUnitario !== undefined
+    ) {
+      const newStockActual =
+        updateProductDto.stockActual ?? existingProduct.stockActual;
+      const newCostoUnitario =
+        updateProductDto.costoUnitario ?? existingProduct.costoUnitario;
       costoTotal = newStockActual * newCostoUnitario;
     }
 
@@ -123,6 +149,7 @@ export class InventoryService {
     return {
       ...product,
       categoria: product.categoria || undefined,
+      marca: product.marca || undefined,
     };
   }
 
@@ -143,9 +170,13 @@ export class InventoryService {
     });
   }
 
-  async updateStock(codigo: string, entradas: number, salidas: number): Promise<ProductResponseDto> {
+  async updateStock(
+    codigo: string,
+    entradas: number,
+    salidas: number,
+  ): Promise<ProductResponseDto> {
     const product = await this.findByCode(codigo);
-    
+
     const newEntradas = product.entradas + entradas;
     const newSalidas = product.salidas + salidas;
     const newStockActual = product.stockActual + entradas - salidas;
@@ -164,6 +195,7 @@ export class InventoryService {
     return {
       ...updatedProduct,
       categoria: updatedProduct.categoria || undefined,
+      marca: updatedProduct.marca || undefined,
     };
   }
 }
