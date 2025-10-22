@@ -1,12 +1,19 @@
-import { IsString, IsNumber, IsEnum, IsNotEmpty, Min } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsNotEmpty,
+  Min,
+  IsDateString,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum EstadoEquipo {
   Bueno = 'Bueno',
   Regular = 'Regular',
   Malo = 'Malo',
-  En_Reparacion = 'En Reparación',
-  Danado = 'Dañado',
+  En_Reparacion = 'En_Reparacion',
+  Danado = 'Danado',
 }
 
 export class CreateEquipmentDto {
@@ -33,34 +40,26 @@ export class CreateEquipmentDto {
   @IsEnum(EstadoEquipo)
   estadoEquipo: EstadoEquipo;
 
-  @ApiProperty({ example: 'Juan Pérez', description: 'Responsible person' })
-  @IsString()
+  @ApiProperty({ example: 1, description: 'Responsible person ID' })
+  @IsNumber()
   @IsNotEmpty()
-  responsable: string;
+  responsableId: number;
 
   @ApiProperty({
-    example: '25/08/2025',
-    description: 'Exit date in DD/MM/YYYY format',
+    example: '2025-08-25T14:30:00.000Z',
+    description: 'Exit date and time',
   })
-  @IsString()
+  @IsDateString()
   @IsNotEmpty()
   fechaSalida: string;
 
-  @ApiProperty({ example: '14:30', description: 'Exit time in HH:MM format' })
-  @IsString()
+  @ApiProperty({ example: 1, description: 'Area ID' })
+  @IsNumber()
   @IsNotEmpty()
-  horaSalida: string;
+  areaId: number;
 
-  @ApiProperty({ example: 'MECANICA', description: 'Area or project' })
-  @IsString()
+  @ApiProperty({ example: 1, description: 'Project ID' })
+  @IsNumber()
   @IsNotEmpty()
-  areaProyecto: string;
-
-  @ApiProperty({
-    example: 'J.Pérez',
-    description: 'Responsible person signature',
-  })
-  @IsString()
-  @IsNotEmpty()
-  firma: string;
+  projectId: number;
 }

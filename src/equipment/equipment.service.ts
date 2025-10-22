@@ -14,9 +14,14 @@ export class EquipmentService {
   ): Promise<EquipmentResponseDto> {
     const equipment = await this.prisma.equipmentReport.create({
       data: {
-        ...createEquipmentDto,
-        // Map enum values to match Prisma enum
-        estadoEquipo: this.mapEstadoEquipo(createEquipmentDto.estadoEquipo),
+        equipo: createEquipmentDto.equipo,
+        serieCodigo: createEquipmentDto.serieCodigo,
+        cantidad: createEquipmentDto.cantidad,
+        estadoEquipo: createEquipmentDto.estadoEquipo,
+        responsableId: createEquipmentDto.responsableId,
+        fechaSalida: new Date(createEquipmentDto.fechaSalida),
+        areaId: createEquipmentDto.areaId,
+        projectId: createEquipmentDto.projectId,
       },
     });
 
@@ -29,10 +34,6 @@ export class EquipmentService {
           OR: [
             { equipo: { contains: search, mode: 'insensitive' as const } },
             { serieCodigo: { contains: search, mode: 'insensitive' as const } },
-            { responsable: { contains: search, mode: 'insensitive' as const } },
-            {
-              areaProyecto: { contains: search, mode: 'insensitive' as const },
-            },
           ],
         }
       : {};
@@ -63,16 +64,9 @@ export class EquipmentService {
   ): Promise<EquipmentResponseDto> {
     await this.findOne(id); // Check if exists
 
-    const updateData: any = { ...updateEquipmentDto };
-    if (updateEquipmentDto.estadoEquipo) {
-      updateData.estadoEquipo = this.mapEstadoEquipo(
-        updateEquipmentDto.estadoEquipo,
-      );
-    }
-
     const equipment = await this.prisma.equipmentReport.update({
       where: { id },
-      data: updateData,
+      data: updateEquipmentDto,
     });
 
     return this.mapToResponse(equipment);
@@ -97,10 +91,8 @@ export class EquipmentService {
     const equipment = await this.prisma.equipmentReport.update({
       where: { id },
       data: {
-        fechaRetorno: returnEquipmentDto.fechaRetorno,
-        horaRetorno: returnEquipmentDto.horaRetorno,
-        estadoRetorno: this.mapEstadoEquipo(returnEquipmentDto.estadoRetorno),
-        firmaRetorno: returnEquipmentDto.firmaRetorno,
+        fechaRetorno: new Date(returnEquipmentDto.fechaRetorno),
+        estadoRetorno: returnEquipmentDto.estadoRetorno,
       },
     });
 
@@ -114,43 +106,15 @@ export class EquipmentService {
       equipo: equipment.equipo,
       serieCodigo: equipment.serieCodigo,
       cantidad: equipment.cantidad,
-      estadoEquipo: this.mapEstadoEquipoToFrontend(equipment.estadoEquipo),
-      responsable: equipment.responsable,
+      estadoEquipo: equipment.estadoEquipo,
+      responsableId: equipment.responsableId,
       fechaSalida: equipment.fechaSalida,
-      horaSalida: equipment.horaSalida,
-      areaProyecto: equipment.areaProyecto,
-      firma: equipment.firma,
-      fechaRetorno: equipment.fechaRetorno || undefined,
-      horaRetorno: equipment.horaRetorno || undefined,
-      estadoRetorno: equipment.estadoRetorno
-        ? this.mapEstadoEquipoToFrontend(equipment.estadoRetorno)
-        : undefined,
-      firmaRetorno: equipment.firmaRetorno || undefined,
+      areaId: equipment.areaId,
+      projectId: equipment.projectId,
+      fechaRetorno: equipment.fechaRetorno ?? undefined,
+      estadoRetorno: equipment.estadoRetorno ?? undefined,
       createdAt: equipment.createdAt,
       updatedAt: equipment.updatedAt,
     };
-  }
-
-  // Helper methods to map between frontend and Prisma enum formats
-  private mapEstadoEquipo(estado: string): any {
-    const mapping = {
-      Bueno: 'Bueno',
-      Regular: 'Regular',
-      Malo: 'Malo',
-      'En Reparación': 'En_Reparacion',
-      Dañado: 'Danado',
-    };
-    return mapping[estado] || estado;
-  }
-
-  private mapEstadoEquipoToFrontend(estado: any): string {
-    const mapping = {
-      Bueno: 'Bueno',
-      Regular: 'Regular',
-      Malo: 'Malo',
-      En_Reparacion: 'En Reparación',
-      Danado: 'Dañado',
-    };
-    return mapping[estado] || estado;
   }
 }

@@ -16,43 +16,37 @@ export class EquipmentResponseDto {
   @ApiProperty({
     example: 'Bueno',
     description: 'Equipment condition',
-    enum: ['Bueno', 'Regular', 'Malo', 'En Reparación', 'Dañado'],
+    enum: ['Bueno', 'Regular', 'Malo', 'En_Reparacion', 'Danado'],
   })
   estadoEquipo: string;
 
-  @ApiProperty({ example: 'Juan Pérez', description: 'Responsible person' })
-  responsable: string;
-
-  @ApiProperty({ example: '25/08/2025', description: 'Exit date' })
-  fechaSalida: string;
-
-  @ApiProperty({ example: '14:30', description: 'Exit time' })
-  horaSalida: string;
-
-  @ApiProperty({ example: 'MECANICA', description: 'Area or project' })
-  areaProyecto: string;
+  @ApiProperty({ example: 1, description: 'Responsible person ID' })
+  responsableId: number;
 
   @ApiProperty({
-    example: 'J.Pérez',
-    description: 'Responsible person signature',
+    example: '2025-08-25T14:30:00.000Z',
+    description: 'Exit date and time',
   })
-  firma: string;
+  fechaSalida: Date;
 
-  @ApiPropertyOptional({ example: '25/08/2025', description: 'Return date' })
-  fechaRetorno?: string;
+  @ApiProperty({ example: 1, description: 'Area ID' })
+  areaId: number;
 
-  @ApiPropertyOptional({ example: '16:45', description: 'Return time' })
-  horaRetorno?: string;
+  @ApiProperty({ example: 1, description: 'Project ID' })
+  projectId: number;
+
+  @ApiPropertyOptional({
+    example: '2025-08-25T16:45:00.000Z',
+    description: 'Return date and time',
+  })
+  fechaRetorno?: Date;
 
   @ApiPropertyOptional({
     example: 'Bueno',
     description: 'Equipment condition upon return',
-    enum: ['Bueno', 'Regular', 'Malo', 'En Reparación', 'Dañado'],
+    enum: ['Bueno', 'Regular', 'Malo', 'En_Reparacion', 'Danado'],
   })
   estadoRetorno?: string;
-
-  @ApiPropertyOptional({ example: 'J.Pérez', description: 'Return signature' })
-  firmaRetorno?: string;
 
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;

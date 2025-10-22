@@ -1,20 +1,15 @@
-import { IsString, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty, IsDateString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 import { EstadoEquipo } from './create-equipment.dto';
 
 export class ReturnEquipmentDto {
   @ApiProperty({
-    example: '25/08/2025',
-    description: 'Return date in DD/MM/YYYY format',
+    example: '2025-08-25T16:45:00.000Z',
+    description: 'Return date and time',
   })
-  @IsString()
+  @IsDateString()
   @IsNotEmpty()
   fechaRetorno: string;
-
-  @ApiProperty({ example: '16:45', description: 'Return time in HH:MM format' })
-  @IsString()
-  @IsNotEmpty()
-  horaRetorno: string;
 
   @ApiProperty({
     enum: EstadoEquipo,
@@ -23,9 +18,4 @@ export class ReturnEquipmentDto {
   })
   @IsEnum(EstadoEquipo)
   estadoRetorno: EstadoEquipo;
-
-  @ApiPropertyOptional({ example: 'J.Pérez', description: 'Return signature' })
-  @IsString()
-  @IsOptional()
-  firmaRetorno?: string;
 }
