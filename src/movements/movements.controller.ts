@@ -19,7 +19,10 @@ import { MovementsService } from './movements.service';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { CreateExitDto } from './dto/create-exit.dto';
 import { UpdateExitQuantityDto } from './dto/update-exit-quantity.dto';
-import { MovementEntryResponseDto, MovementExitResponseDto } from './dto/movement-response.dto';
+import {
+  MovementEntryResponseDto,
+  MovementExitResponseDto,
+} from './dto/movement-response.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermissions } from '../common/decorators/permissions.decorator';
@@ -44,7 +47,9 @@ export class MovementsController {
     status: 404,
     description: 'Product not found',
   })
-  createEntry(@Body() createEntryDto: CreateEntryDto): Promise<MovementEntryResponseDto> {
+  createEntry(
+    @Body() createEntryDto: CreateEntryDto,
+  ): Promise<MovementEntryResponseDto> {
     return this.movementsService.createEntry(createEntryDto);
   }
 
@@ -64,7 +69,9 @@ export class MovementsController {
     status: 404,
     description: 'Product not found',
   })
-  createExit(@Body() createExitDto: CreateExitDto): Promise<MovementExitResponseDto> {
+  createExit(
+    @Body() createExitDto: CreateExitDto,
+  ): Promise<MovementExitResponseDto> {
     return this.movementsService.createExit(createExitDto);
   }
 
@@ -77,7 +84,9 @@ export class MovementsController {
     description: 'Entries retrieved successfully',
     type: [MovementEntryResponseDto],
   })
-  findAllEntries(@Query('q') search?: string): Promise<MovementEntryResponseDto[]> {
+  findAllEntries(
+    @Query('q') search?: string,
+  ): Promise<MovementEntryResponseDto[]> {
     return this.movementsService.findAllEntries(search);
   }
 
@@ -90,7 +99,9 @@ export class MovementsController {
     description: 'Exits retrieved successfully',
     type: [MovementExitResponseDto],
   })
-  findAllExits(@Query('q') search?: string): Promise<MovementExitResponseDto[]> {
+  findAllExits(
+    @Query('q') search?: string,
+  ): Promise<MovementExitResponseDto[]> {
     return this.movementsService.findAllExits(search);
   }
 

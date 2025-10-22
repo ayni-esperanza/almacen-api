@@ -44,7 +44,9 @@ export class InventoryController {
     status: 409,
     description: 'Product code already exists',
   })
-  create(@Body() createProductDto: CreateProductDto): Promise<ProductResponseDto> {
+  create(
+    @Body() createProductDto: CreateProductDto,
+  ): Promise<ProductResponseDto> {
     return this.inventoryService.create(createProductDto);
   }
 

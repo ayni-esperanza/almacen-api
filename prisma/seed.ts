@@ -42,7 +42,7 @@ async function main() {
 
   for (const userData of users) {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
-    
+
     await prisma.user.upsert({
       where: { username: userData.username },
       update: {},
@@ -61,9 +61,19 @@ async function main() {
 
   // Crear áreas predefinidas
   const areas = [
-    'ALMACEN', 'DANPER', 'electricidad', 'EXTRUSORA', 'fibra',
-    'INYECTORA', 'JARDINES', 'LADRILLERA', 'líneas de vida',
-    'MECANICA', 'metalmecánica', 'OTRO', 'BROCHA'
+    'ALMACEN',
+    'DANPER',
+    'electricidad',
+    'EXTRUSORA',
+    'fibra',
+    'INYECTORA',
+    'JARDINES',
+    'LADRILLERA',
+    'líneas de vida',
+    'MECANICA',
+    'metalmecánica',
+    'OTRO',
+    'BROCHA',
   ];
 
   for (const areaName of areas) {
@@ -79,39 +89,39 @@ async function main() {
     {
       codigo: 'AF2025',
       descripcion: 'AFLOJA TODO',
-      costoUnitario: 12.00,
+      costoUnitario: 12.0,
       ubicacion: 'ALMACEN',
       entradas: 3,
       salidas: 2,
       stockActual: 1,
       unidadMedida: 'und',
       proveedor: 'FERRETERIA CENTRAL',
-      costoTotal: 12.00
+      costoTotal: 12.0,
     },
     {
       codigo: 'TU2024',
       descripcion: 'TUERCA HEXAGONAL 1/2"',
-      costoUnitario: 0.50,
+      costoUnitario: 0.5,
       ubicacion: 'ALMACEN',
       entradas: 100,
       salidas: 20,
       stockActual: 80,
       unidadMedida: 'und',
       proveedor: 'FERRETERIA CENTRAL',
-      costoTotal: 40.00
+      costoTotal: 40.0,
     },
     {
       codigo: 'AC2023',
       descripcion: 'ACEITE HIDRAULICO ISO 68',
-      costoUnitario: 45.00,
+      costoUnitario: 45.0,
       ubicacion: 'ALMACEN',
       entradas: 10,
       salidas: 3,
       stockActual: 7,
       unidadMedida: 'lt',
       proveedor: 'LUBRICANTES SAC',
-      costoTotal: 315.00
-    }
+      costoTotal: 315.0,
+    },
   ];
 
   for (const producto of productos) {

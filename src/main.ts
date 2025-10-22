@@ -26,7 +26,9 @@ async function bootstrap() {
   // Swagger API Documentation
   const config = new DocumentBuilder()
     .setTitle('AYNI Almacén API')
-    .setDescription('Sistema de Inventario AYNI - API completa para gestión de productos, movimientos, equipos y reportes')
+    .setDescription(
+      'Sistema de Inventario AYNI - API completa para gestión de productos, movimientos, equipos y reportes',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .addTag('Authentication', 'Autenticación y gestión de usuarios')
@@ -45,7 +47,7 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  
+
   console.log(`AYNI Almacén API running on: http://localhost:${port}`);
   console.log(`Swagger docs available at: http://localhost:${port}/api`);
 }

@@ -41,7 +41,9 @@ export class EquipmentController {
     description: 'Equipment report created successfully',
     type: EquipmentResponseDto,
   })
-  create(@Body() createEquipmentDto: CreateEquipmentDto): Promise<EquipmentResponseDto> {
+  create(
+    @Body() createEquipmentDto: CreateEquipmentDto,
+  ): Promise<EquipmentResponseDto> {
     return this.equipmentService.create(createEquipmentDto);
   }
 

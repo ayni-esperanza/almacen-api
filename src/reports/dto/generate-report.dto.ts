@@ -5,24 +5,30 @@ export enum ReportType {
   EXITS = 'exits',
   ENTRIES = 'entries',
   EQUIPMENT = 'equipment',
-  INVENTORY = 'inventory'
+  INVENTORY = 'inventory',
 }
 
 export class GenerateReportDto {
-  @ApiProperty({ 
-    enum: ReportType, 
-    example: ReportType.EXITS, 
-    description: 'Type of report to generate' 
+  @ApiProperty({
+    enum: ReportType,
+    example: ReportType.EXITS,
+    description: 'Type of report to generate',
   })
   @IsEnum(ReportType)
   type: ReportType;
 
-  @ApiPropertyOptional({ example: '01/08/2025', description: 'Start date in DD/MM/YYYY format' })
+  @ApiPropertyOptional({
+    example: '01/08/2025',
+    description: 'Start date in DD/MM/YYYY format',
+  })
   @IsString()
   @IsOptional()
   startDate?: string;
 
-  @ApiPropertyOptional({ example: '31/08/2025', description: 'End date in DD/MM/YYYY format' })
+  @ApiPropertyOptional({
+    example: '31/08/2025',
+    description: 'End date in DD/MM/YYYY format',
+  })
   @IsString()
   @IsOptional()
   endDate?: string;
@@ -32,12 +38,18 @@ export class GenerateReportDto {
   @IsOptional()
   area?: string;
 
-  @ApiPropertyOptional({ example: 'Juan Pérez', description: 'Filter by responsible person' })
+  @ApiPropertyOptional({
+    example: 'Juan Pérez',
+    description: 'Filter by responsible person',
+  })
   @IsString()
   @IsOptional()
   responsable?: string;
 
-  @ApiPropertyOptional({ example: 'Proyecto ABC', description: 'Filter by project (for exits)' })
+  @ApiPropertyOptional({
+    example: 'Proyecto ABC',
+    description: 'Filter by project (for exits)',
+  })
   @IsString()
   @IsOptional()
   proyecto?: string;

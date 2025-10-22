@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../common/services/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -15,12 +20,19 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<AuthUser | null> {
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<AuthUser | null> {
     const user = await this.prisma.user.findUnique({
       where: { username },
     });
 
-    if (user && user.isActive && await bcrypt.compare(password, user.password)) {
+    if (
+      user &&
+      user.isActive &&
+      (await bcrypt.compare(password, user.password))
+    ) {
       return {
         id: user.id,
         username: user.username,
@@ -33,15 +45,15 @@ export class AuthService {
 
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
     const user = await this.validateUser(loginDto.username, loginDto.password);
-    
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload: JwtPayload = { 
-      username: user.username, 
+    const payload: JwtPayload = {
+      username: user.username,
       sub: user.id,
-      role: user.role
+      role: user.role,
     };
 
     // Update user authentication status
@@ -186,7 +198,10 @@ export class AuthService {
     }
 
     // Check if username is being updated and doesn't conflict
-    if (updateUserDto.username && updateUserDto.username !== existingUser.username) {
+    if (
+      updateUserDto.username &&
+      updateUserDto.username !== existingUser.username
+    ) {
       const usernameExists = await this.prisma.user.findUnique({
         where: { username: updateUserDto.username },
       });

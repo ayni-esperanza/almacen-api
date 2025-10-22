@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/services/prisma.service';
-import { ExitReportResponseDto, ExitReportDataDto, ReportSummaryDto } from './dto/report-response.dto';
+import {
+  ExitReportResponseDto,
+  ExitReportDataDto,
+  ReportSummaryDto,
+} from './dto/report-response.dto';
 import { GenerateReportDto, ReportType } from './dto/generate-report.dto';
 import { PdfExportService } from '../common/services/pdf-export.service';
 
@@ -80,10 +84,13 @@ export class ReportsService {
 
     // Calculate summary
     const totalItems = exits.reduce((sum, exit) => sum + exit.cantidad, 0);
-    const totalValue = exits.reduce((sum, exit) => sum + (exit.cantidad * exit.precioUnitario), 0);
+    const totalValue = exits.reduce(
+      (sum, exit) => sum + exit.cantidad * exit.precioUnitario,
+      0,
+    );
     const totalMovements = exits.length;
 
-    const data: ExitReportDataDto[] = exits.map(exit => ({
+    const data: ExitReportDataDto[] = exits.map((exit) => ({
       fecha: exit.fecha,
       codigoProducto: exit.codigoProducto,
       descripcion: exit.descripcion,
@@ -139,10 +146,13 @@ export class ReportsService {
 
     // Calculate summary
     const totalItems = entries.reduce((sum, entry) => sum + entry.cantidad, 0);
-    const totalValue = entries.reduce((sum, entry) => sum + (entry.cantidad * entry.precioUnitario), 0);
+    const totalValue = entries.reduce(
+      (sum, entry) => sum + entry.cantidad * entry.precioUnitario,
+      0,
+    );
     const totalMovements = entries.length;
 
-    const data = entries.map(entry => ({
+    const data = entries.map((entry) => ({
       fecha: entry.fecha,
       codigoProducto: entry.codigoProducto,
       descripcion: entry.descripcion,
@@ -199,7 +209,7 @@ export class ReportsService {
     const totalItems = equipment.reduce((sum, item) => sum + item.cantidad, 0);
     const totalMovements = equipment.length;
 
-    const data = equipment.map(item => ({
+    const data = equipment.map((item) => ({
       equipo: item.equipo,
       serieCodigo: item.serieCodigo,
       cantidad: item.cantidad,
@@ -211,7 +221,9 @@ export class ReportsService {
       firma: item.firma,
       fechaRetorno: item.fechaRetorno,
       horaRetorno: item.horaRetorno,
-      estadoRetorno: item.estadoRetorno ? this.mapEstadoEquipoToFrontend(item.estadoRetorno) : undefined,
+      estadoRetorno: item.estadoRetorno
+        ? this.mapEstadoEquipoToFrontend(item.estadoRetorno)
+        : undefined,
       firmaRetorno: item.firmaRetorno,
     }));
 
@@ -232,11 +244,17 @@ export class ReportsService {
     });
 
     // Calculate summary
-    const totalItems = products.reduce((sum, product) => sum + product.stockActual, 0);
-    const totalValue = products.reduce((sum, product) => sum + product.costoTotal, 0);
+    const totalItems = products.reduce(
+      (sum, product) => sum + product.stockActual,
+      0,
+    );
+    const totalValue = products.reduce(
+      (sum, product) => sum + product.costoTotal,
+      0,
+    );
     const totalProducts = products.length;
 
-    const data = products.map(product => ({
+    const data = products.map((product) => ({
       codigo: product.codigo,
       descripcion: product.descripcion,
       costoUnitario: product.costoUnitario,
@@ -260,21 +278,28 @@ export class ReportsService {
   }
 
   async generateReport(generateReportDto: GenerateReportDto): Promise<any> {
-    const { type, startDate, endDate, area, responsable, proyecto } = generateReportDto;
+    const { type, startDate, endDate, area, responsable, proyecto } =
+      generateReportDto;
 
     switch (type) {
       case ReportType.EXITS:
-        return this.getExitsReport(startDate, endDate, area, responsable, proyecto);
-      
+        return this.getExitsReport(
+          startDate,
+          endDate,
+          area,
+          responsable,
+          proyecto,
+        );
+
       case ReportType.ENTRIES:
         return this.getEntriesReport(startDate, endDate, area, responsable);
-      
+
       case ReportType.EQUIPMENT:
         return this.getEquipmentReport(startDate, endDate, area, responsable);
-      
+
       case ReportType.INVENTORY:
         return this.getInventoryReport();
-      
+
       default:
         throw new Error(`Unknown report type: ${type}`);
     }
@@ -283,25 +308,25 @@ export class ReportsService {
   // Helper method to map Prisma enum to frontend format
   private mapEstadoEquipoToFrontend(estado: any): string {
     const mapping = {
-      'Bueno': 'Bueno',
-      'Regular': 'Regular',
-      'Malo': 'Malo',
-      'En_Reparacion': 'En Reparación',
-      'Danado': 'Dañado'
+      Bueno: 'Bueno',
+      Regular: 'Regular',
+      Malo: 'Malo',
+      En_Reparacion: 'En Reparación',
+      Danado: 'Dañado',
     };
     return mapping[estado] || estado;
   }
 
   // === STOCK ALERTS METHODS ===
-  
+
   async getStockAlerts(filters: StockAlertFilters): Promise<StockAlert[]> {
     const where: any = {};
-    
+
     // Aplicar filtros
     if (filters.categoria) {
       where.categoria = { contains: filters.categoria, mode: 'insensitive' };
     }
-    
+
     if (filters.ubicacion) {
       where.ubicacion = { contains: filters.ubicacion, mode: 'insensitive' };
     }
@@ -313,10 +338,10 @@ export class ReportsService {
     });
 
     // Convertir a alertas de stock
-    const alerts: StockAlert[] = products.map(product => {
+    const alerts: StockAlert[] = products.map((product) => {
       const stockMinimo = 10; // Stock mínimo por defecto
       let estado: 'critico' | 'bajo' | 'normal' = 'normal';
-      
+
       if (product.stockActual === 0) {
         estado = 'critico';
       } else if (product.stockActual < stockMinimo) {
@@ -339,13 +364,17 @@ export class ReportsService {
 
     // Aplicar filtros adicionales
     let filteredAlerts = alerts;
-    
+
     if (filters.estado) {
-      filteredAlerts = filteredAlerts.filter(alert => alert.estado === filters.estado);
+      filteredAlerts = filteredAlerts.filter(
+        (alert) => alert.estado === filters.estado,
+      );
     }
-    
+
     if (filters.mostrarSoloCriticos) {
-      filteredAlerts = filteredAlerts.filter(alert => alert.estado === 'critico');
+      filteredAlerts = filteredAlerts.filter(
+        (alert) => alert.estado === 'critico',
+      );
     }
 
     return filteredAlerts;
@@ -362,7 +391,7 @@ export class ReportsService {
 
     const stockMinimo = 10;
     let estado: 'critico' | 'bajo' | 'normal' = 'normal';
-    
+
     if (product.stockActual === 0) {
       estado = 'critico';
     } else if (product.stockActual < stockMinimo) {
@@ -393,7 +422,7 @@ export class ReportsService {
     let totalStock = 0;
     let stockMinimoTotal = 0;
 
-    products.forEach(product => {
+    products.forEach((product) => {
       totalStock += product.stockActual;
       stockMinimoTotal += stockMinimo;
 
@@ -449,7 +478,7 @@ export class ReportsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return exits.map(exit => ({
+    return exits.map((exit) => ({
       id: exit.id,
       fecha: exit.fecha,
       codigoProducto: exit.codigoProducto,
@@ -465,14 +494,17 @@ export class ReportsService {
 
   async getMonthlyExpenseData(filters: any): Promise<any[]> {
     const exits = await this.getExpenseReports(filters);
-    
+
     // Agrupar por mes
-    const monthlyData = new Map<string, { gasto: number; movimientos: number }>();
-    
-    exits.forEach(exit => {
+    const monthlyData = new Map<
+      string,
+      { gasto: number; movimientos: number }
+    >();
+
+    exits.forEach((exit) => {
       const month = exit.fecha.substring(3, 10); // DD/MM/YYYY -> MM/YYYY
       const existing = monthlyData.get(month) || { gasto: 0, movimientos: 0 };
-      
+
       monthlyData.set(month, {
         gasto: existing.gasto + exit.total,
         movimientos: existing.movimientos + 1,
@@ -488,18 +520,24 @@ export class ReportsService {
 
   async getAreaExpenseData(filters: any): Promise<any[]> {
     const exits = await this.getExpenseReports(filters);
-    
+
     // Agrupar por área
-    const areaData = new Map<string, { 
-      totalGasto: number; 
-      cantidadMovimientos: number;
-      proyectos: Map<string, { totalGasto: number; cantidadMovimientos: number }>;
-    }>();
-    
-    exits.forEach(exit => {
+    const areaData = new Map<
+      string,
+      {
+        totalGasto: number;
+        cantidadMovimientos: number;
+        proyectos: Map<
+          string,
+          { totalGasto: number; cantidadMovimientos: number }
+        >;
+      }
+    >();
+
+    exits.forEach((exit) => {
       const area = exit.area || 'Sin área';
       const proyecto = exit.proyecto || 'Sin proyecto';
-      
+
       let areaInfo = areaData.get(area);
       if (!areaInfo) {
         areaInfo = {
@@ -509,16 +547,16 @@ export class ReportsService {
         };
         areaData.set(area, areaInfo);
       }
-      
+
       areaInfo.totalGasto += exit.total;
       areaInfo.cantidadMovimientos += 1;
-      
+
       let proyectoInfo = areaInfo.proyectos.get(proyecto);
       if (!proyectoInfo) {
         proyectoInfo = { totalGasto: 0, cantidadMovimientos: 0 };
         areaInfo.proyectos.set(proyecto, proyectoInfo);
       }
-      
+
       proyectoInfo.totalGasto += exit.total;
       proyectoInfo.cantidadMovimientos += 1;
     });
@@ -527,11 +565,13 @@ export class ReportsService {
       area,
       totalGasto: data.totalGasto,
       cantidadMovimientos: data.cantidadMovimientos,
-      proyectos: Array.from(data.proyectos.entries()).map(([proyecto, proyectoData]) => ({
-        proyecto,
-        totalGasto: proyectoData.totalGasto,
-        cantidadMovimientos: proyectoData.cantidadMovimientos,
-      })),
+      proyectos: Array.from(data.proyectos.entries()).map(
+        ([proyecto, proyectoData]) => ({
+          proyecto,
+          totalGasto: proyectoData.totalGasto,
+          cantidadMovimientos: proyectoData.cantidadMovimientos,
+        }),
+      ),
     }));
   }
 
@@ -540,13 +580,13 @@ export class ReportsService {
   async exportStockAlertsPDF(filters: StockAlertFilters): Promise<Buffer> {
     const alerts = await this.getStockAlerts(filters);
     const statistics = await this.getStockAlertStatistics();
-    
+
     return this.pdfExportService.generateStockAlertsPDF(alerts, statistics);
   }
 
   async exportExpenseReportPDF(filters: any): Promise<Buffer> {
     const data = await this.getExpenseReports(filters);
-    
+
     return this.pdfExportService.generateExpenseReportPDF(data, filters);
   }
 }

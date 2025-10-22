@@ -10,7 +10,7 @@ export class ProductResponseDto {
   @ApiProperty({ example: 'AFLOJA TODO', description: 'Product description' })
   descripcion: string;
 
-  @ApiProperty({ example: 12.00, description: 'Unit cost' })
+  @ApiProperty({ example: 12.0, description: 'Unit cost' })
   costoUnitario: number;
 
   @ApiProperty({ example: 'ALMACEN', description: 'Storage location' })
@@ -31,10 +31,13 @@ export class ProductResponseDto {
   @ApiProperty({ example: 'FERRETERIA CENTRAL', description: 'Supplier name' })
   proveedor: string;
 
-  @ApiProperty({ example: 12.00, description: 'Total cost' })
+  @ApiProperty({ example: 12.0, description: 'Total cost' })
   costoTotal: number;
 
-  @ApiPropertyOptional({ example: 'Herramientas', description: 'Product category' })
+  @ApiPropertyOptional({
+    example: 'Herramientas',
+    description: 'Product category',
+  })
   categoria?: string;
 
   @ApiProperty({ description: 'Creation date' })
