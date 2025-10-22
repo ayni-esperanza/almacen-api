@@ -12,6 +12,8 @@ async function main() {
       email: 'admin@ayni.com',
       firstName: 'Administrador',
       lastName: 'Sistema',
+      phoneNumber: '+51 999888777',
+      avatarUrl: 'https://ui-avatars.com/api/?name=Admin+Sistema',
       role: UserRole.JEFE,
     },
     {
@@ -20,6 +22,8 @@ async function main() {
       email: 'gerente@ayni.com',
       firstName: 'Juan',
       lastName: 'Gerente',
+      phoneNumber: '+51 999777666',
+      avatarUrl: 'https://ui-avatars.com/api/?name=Juan+Gerente',
       role: UserRole.GERENTE,
     },
     {
@@ -28,6 +32,8 @@ async function main() {
       email: 'asistente@ayni.com',
       firstName: 'María',
       lastName: 'Asistente',
+      phoneNumber: '+51 999666555',
+      avatarUrl: 'https://ui-avatars.com/api/?name=Maria+Asistente',
       role: UserRole.ASISTENTE,
     },
     {
@@ -36,6 +42,8 @@ async function main() {
       email: 'ayudante@ayni.com',
       firstName: 'Carlos',
       lastName: 'Ayudante',
+      phoneNumber: '+51 999555444',
+      avatarUrl: 'https://ui-avatars.com/api/?name=Carlos+Ayudante',
       role: UserRole.AYUDANTE,
     },
   ];
@@ -52,6 +60,8 @@ async function main() {
         email: userData.email,
         firstName: userData.firstName,
         lastName: userData.lastName,
+        phoneNumber: userData.phoneNumber,
+        avatarUrl: userData.avatarUrl,
         role: userData.role,
         isActive: true,
         isAuthenticated: false,

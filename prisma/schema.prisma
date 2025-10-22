@@ -25,6 +25,8 @@ model User {
   email           String? @unique
   firstName       String?
   lastName        String?
+  phoneNumber     String?
+  avatarUrl       String?
   role            UserRole @default(AYUDANTE)
   isActive        Boolean @default(true)
   isAuthenticated Boolean @default(false)
