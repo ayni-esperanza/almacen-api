@@ -105,19 +105,21 @@ model Unit {
 }
 
 model Project {
-  id        Int @id @default(autoincrement())
-  nombre    String @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int @id @default(autoincrement())
+  nombre        String @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  movementExits MovementExit[]
 
   @@map("projects")
 }
 
 model Responsible {
-  id        Int @id @default(autoincrement())
-  nombre    String @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int @id @default(autoincrement())
+  nombre        String @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  movementExits MovementExit[]
 
   @@map("responsibles")
 }
@@ -125,37 +127,40 @@ model Responsible {
 // === MOVEMENT MODELS ===
 model MovementEntry {
   id             Int @id @default(autoincrement())
-  fecha          String // Format: "DD/MM/YYYY"
-  codigoProducto String
+  fecha          DateTime
+  productId      Int
   descripcion    String
   precioUnitario Float
   cantidad       Int
-  responsable    String?
-  area          String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  areaId         Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  product       Product @relation(fields: [codigoProducto], references: [codigo])
+  product        Product @relation(fields: [productId], references: [id])
+  area           Area @relation(fields: [areaId], references: [id])
 
   @@map("movement_entries")
 }
 
 model MovementExit {
   id             Int @id @default(autoincrement())
-  fecha          String // Format: "DD/MM/YYYY"
-  codigoProducto String
+  fecha          DateTime
+  productId      Int
   descripcion    String
   precioUnitario Float
   cantidad       Int
-  responsable    String?
-  area          String?
-  proyecto      String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  responsableId  Int
+  areaId         Int
+  projectId      Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  product       Product @relation(fields: [codigoProducto], references: [codigo])
+  product        Product @relation(fields: [productId], references: [id])
+  responsible    Responsible @relation(fields: [responsableId], references: [id])
+  area           Area @relation(fields: [areaId], references: [id])
+  project        Project @relation(fields: [projectId], references: [id])
 
   @@map("movement_exits")
 }
@@ -192,8 +197,12 @@ model EquipmentReport {
 
 // === CONFIGURATION MODELS ===
 model Area {
-  id     Int @id @default(autoincrement())
-  nombre String @unique
+  id              Int @id @default(autoincrement())
+  nombre          String @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  movementEntries MovementEntry[]
+  movementExits   MovementExit[]
 
   @@map("areas")
 }
