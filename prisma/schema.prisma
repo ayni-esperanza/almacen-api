@@ -39,7 +39,9 @@ model Product {
   id            Int @id @default(autoincrement())
   codigo        String @unique
   nombre        String
+  marca         String?
   costoUnitario Float
+  stockMinimo   Int    @default(0)
   providerId    Int
   locationId    Int
   categoryId    Int
@@ -47,7 +49,7 @@ model Product {
   entradas      Int    @default(0)
   salidas       Int    @default(0) 
   stockActual   Int    @default(0)
-  costoTotal    Float  @default(0)
+  observaciones String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -63,35 +65,61 @@ model Product {
 }
 
 model Provider {
-  id       Int @id @default(autoincrement())
-  nombre   String @unique
-  products Product[]
+  id        Int @id @default(autoincrement())
+  nombre    String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  products  Product[]
 
   @@map("providers")
 }
 
 model Location {
-  id       Int @id @default(autoincrement())
-  nombre   String @unique
-  products Product[]
+  id        Int @id @default(autoincrement())
+  nombre    String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  products  Product[]
 
   @@map("locations")
 }
 
 model Category {
-  id       Int @id @default(autoincrement())
-  nombre   String @unique
-  products Product[]
+  id        Int @id @default(autoincrement())
+  nombre    String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  products  Product[]
 
   @@map("categories")
 }
 
 model Unit {
-  id       Int @id @default(autoincrement())
-  nombre   String @unique
-  products Product[]
+  id        Int @id @default(autoincrement())
+  nombre    String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  products  Product[]
 
   @@map("units")
+}
+
+model Project {
+  id        Int @id @default(autoincrement())
+  nombre    String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("projects")
+}
+
+model Responsible {
+  id        Int @id @default(autoincrement())
+  nombre    String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("responsibles")
 }
 
 // === MOVEMENT MODELS ===
