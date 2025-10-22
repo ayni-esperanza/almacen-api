@@ -1,32 +1,26 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class MovementEntryResponseDto {
   @ApiProperty({ example: 1, description: 'Entry ID' })
   id: number;
 
-  @ApiProperty({ example: '25/08/2025', description: 'Entry date' })
-  fecha: string;
+  @ApiProperty({
+    example: '2025-08-25T14:30:00.000Z',
+    description: 'Entry date and time',
+  })
+  fecha: Date;
 
-  @ApiProperty({ example: 'AF2025', description: 'Product code' })
-  codigoProducto: string;
+  @ApiProperty({ example: 1, description: 'Product ID' })
+  productId: number;
 
   @ApiProperty({ example: 'AFLOJA TODO', description: 'Product description' })
   descripcion: string;
 
-  @ApiProperty({ example: 12.0, description: 'Unit price' })
-  precioUnitario: number;
-
   @ApiProperty({ example: 5, description: 'Quantity entered' })
   cantidad: number;
 
-  @ApiPropertyOptional({
-    example: 'Juan Pérez',
-    description: 'Responsible person',
-  })
-  responsable?: string;
-
-  @ApiPropertyOptional({ example: 'ALMACEN', description: 'Target area' })
-  area?: string;
+  @ApiProperty({ example: 1, description: 'Area ID' })
+  areaId: number;
 
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;
@@ -39,35 +33,29 @@ export class MovementExitResponseDto {
   @ApiProperty({ example: 1, description: 'Exit ID' })
   id: number;
 
-  @ApiProperty({ example: '25/08/2025', description: 'Exit date' })
-  fecha: string;
+  @ApiProperty({
+    example: '2025-08-25T14:30:00.000Z',
+    description: 'Exit date and time',
+  })
+  fecha: Date;
 
-  @ApiProperty({ example: 'AF2025', description: 'Product code' })
-  codigoProducto: string;
+  @ApiProperty({ example: 1, description: 'Product ID' })
+  productId: number;
 
   @ApiProperty({ example: 'AFLOJA TODO', description: 'Product description' })
   descripcion: string;
 
-  @ApiProperty({ example: 12.0, description: 'Unit price' })
-  precioUnitario: number;
-
   @ApiProperty({ example: 2, description: 'Quantity exited' })
   cantidad: number;
 
-  @ApiPropertyOptional({
-    example: 'Juan Pérez',
-    description: 'Responsible person',
-  })
-  responsable?: string;
+  @ApiProperty({ example: 1, description: 'Responsible person ID' })
+  responsableId: number;
 
-  @ApiPropertyOptional({ example: 'MECANICA', description: 'Source area' })
-  area?: string;
+  @ApiProperty({ example: 1, description: 'Area ID' })
+  areaId: number;
 
-  @ApiPropertyOptional({
-    example: 'Proyecto ABC',
-    description: 'Project assignment',
-  })
-  proyecto?: string;
+  @ApiProperty({ example: 1, description: 'Project ID' })
+  projectId: number;
 
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;

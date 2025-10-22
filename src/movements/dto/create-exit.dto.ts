@@ -1,59 +1,48 @@
 import {
   IsString,
   IsNumber,
-  IsOptional,
   IsNotEmpty,
   Min,
+  IsDateString,
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateExitDto {
   @ApiProperty({
-    example: '25/08/2025',
-    description: 'Exit date in DD/MM/YYYY format',
+    example: '2025-08-25T14:30:00.000Z',
+    description: 'Exit date and time',
   })
-  @IsString()
+  @IsDateString()
   @IsNotEmpty()
-  fecha: string;
+  fecha: Date;
 
-  @ApiProperty({ example: 'AF2025', description: 'Product code' })
-  @IsString()
-  @IsNotEmpty()
-  codigoProducto: string;
+  @ApiProperty({ example: 1, description: 'Product ID' })
+  @IsNumber()
+  @Min(1)
+  productId: number;
 
   @ApiProperty({ example: 'AFLOJA TODO', description: 'Product description' })
   @IsString()
   @IsNotEmpty()
   descripcion: string;
 
-  @ApiProperty({ example: 12.0, description: 'Unit price for this exit' })
-  @IsNumber()
-  @Min(0)
-  precioUnitario: number;
-
   @ApiProperty({ example: 2, description: 'Quantity exiting' })
   @IsNumber()
   @Min(1)
   cantidad: number;
 
-  @ApiPropertyOptional({
-    example: 'Juan Pérez',
-    description: 'Responsible person',
-  })
-  @IsString()
-  @IsOptional()
-  responsable?: string;
+  @ApiProperty({ example: 1, description: 'Responsible person ID' })
+  @IsNumber()
+  @Min(1)
+  responsableId: number;
 
-  @ApiPropertyOptional({ example: 'MECANICA', description: 'Source area' })
-  @IsString()
-  @IsOptional()
-  area?: string;
+  @ApiProperty({ example: 1, description: 'Area ID' })
+  @IsNumber()
+  @Min(1)
+  areaId: number;
 
-  @ApiPropertyOptional({
-    example: 'Proyecto ABC',
-    description: 'Project assignment',
-  })
-  @IsString()
-  @IsOptional()
-  proyecto?: string;
+  @ApiProperty({ example: 1, description: 'Project ID' })
+  @IsNumber()
+  @Min(1)
+  projectId: number;
 }

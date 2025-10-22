@@ -1,51 +1,38 @@
 import {
   IsString,
   IsNumber,
-  IsOptional,
   IsNotEmpty,
   Min,
+  IsDateString,
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateEntryDto {
   @ApiProperty({
-    example: '25/08/2025',
-    description: 'Entry date in DD/MM/YYYY format',
+    example: '2025-08-25T14:30:00.000Z',
+    description: 'Entry date and time',
   })
-  @IsString()
+  @IsDateString()
   @IsNotEmpty()
-  fecha: string;
+  fecha: Date;
 
-  @ApiProperty({ example: 'AF2025', description: 'Product code' })
-  @IsString()
-  @IsNotEmpty()
-  codigoProducto: string;
+  @ApiProperty({ example: 1, description: 'Product ID' })
+  @IsNumber()
+  @Min(1)
+  productId: number;
 
   @ApiProperty({ example: 'AFLOJA TODO', description: 'Product description' })
   @IsString()
   @IsNotEmpty()
   descripcion: string;
 
-  @ApiProperty({ example: 12.0, description: 'Unit price for this entry' })
-  @IsNumber()
-  @Min(0)
-  precioUnitario: number;
-
   @ApiProperty({ example: 5, description: 'Quantity entering' })
   @IsNumber()
   @Min(1)
   cantidad: number;
 
-  @ApiPropertyOptional({
-    example: 'Juan Pérez',
-    description: 'Responsible person',
-  })
-  @IsString()
-  @IsOptional()
-  responsable?: string;
-
-  @ApiPropertyOptional({ example: 'ALMACEN', description: 'Target area' })
-  @IsString()
-  @IsOptional()
-  area?: string;
+  @ApiProperty({ example: 1, description: 'Area ID' })
+  @IsNumber()
+  @Min(1)
+  areaId: number;
 }

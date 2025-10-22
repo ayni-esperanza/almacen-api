@@ -24,7 +24,7 @@ export class MovementsService {
     createEntryDto: CreateEntryDto,
   ): Promise<MovementEntryResponseDto> {
     // Verify product exists
-    await this.inventoryService.findByCode(createEntryDto.codigoProducto);
+    await this.inventoryService.findOne(createEntryDto.productId);
 
     // Create the entry
     const entry = await this.prisma.movementEntry.create({
@@ -33,7 +33,7 @@ export class MovementsService {
 
     // Update product stock
     await this.inventoryService.updateStock(
-      createEntryDto.codigoProducto,
+      (await this.inventoryService.findOne(createEntryDto.productId)).codigo,
       createEntryDto.cantidad,
       0,
     );
@@ -45,8 +45,8 @@ export class MovementsService {
     createExitDto: CreateExitDto,
   ): Promise<MovementExitResponseDto> {
     // Verify product exists and has enough stock
-    const product = await this.inventoryService.findByCode(
-      createExitDto.codigoProducto,
+    const product = await this.inventoryService.findOne(
+      createExitDto.productId,
     );
 
     if (product.stockActual < createExitDto.cantidad) {
@@ -62,7 +62,7 @@ export class MovementsService {
 
     // Update product stock
     await this.inventoryService.updateStock(
-      createExitDto.codigoProducto,
+      product.codigo,
       0,
       createExitDto.cantidad,
     );
@@ -74,14 +74,7 @@ export class MovementsService {
     const where = search
       ? {
           OR: [
-            {
-              codigoProducto: {
-                contains: search,
-                mode: 'insensitive' as const,
-              },
-            },
             { descripcion: { contains: search, mode: 'insensitive' as const } },
-            { responsable: { contains: search, mode: 'insensitive' as const } },
           ],
         }
       : {};
@@ -98,15 +91,7 @@ export class MovementsService {
     const where = search
       ? {
           OR: [
-            {
-              codigoProducto: {
-                contains: search,
-                mode: 'insensitive' as const,
-              },
-            },
             { descripcion: { contains: search, mode: 'insensitive' as const } },
-            { responsable: { contains: search, mode: 'insensitive' as const } },
-            { proyecto: { contains: search, mode: 'insensitive' as const } },
           ],
         }
       : {};
@@ -136,9 +121,17 @@ export class MovementsService {
     updateExitQuantityDto: UpdateExitQuantityDto,
   ): Promise<MovementExitResponseDto> {
     const existingExit = await this.findExitById(id);
-    const product = await this.inventoryService.findByCode(
-      existingExit.codigoProducto,
-    );
+
+    // Get product by ID to obtain its codigo
+    const productById = await this.prisma.product.findUnique({
+      where: { id: existingExit.productId },
+    });
+
+    if (!productById) {
+      throw new BadRequestException('Product not found');
+    }
+
+    const product = await this.inventoryService.findByCode(productById.codigo);
 
     // Calculate the difference in quantity
     const quantityDifference =
@@ -161,14 +154,14 @@ export class MovementsService {
     if (quantityDifference > 0) {
       // Increasing exit quantity (reduce stock)
       await this.inventoryService.updateStock(
-        existingExit.codigoProducto,
+        productById.codigo,
         0,
         quantityDifference,
       );
     } else if (quantityDifference < 0) {
       // Decreasing exit quantity (increase stock)
       await this.inventoryService.updateStock(
-        existingExit.codigoProducto,
+        productById.codigo,
         Math.abs(quantityDifference),
         0,
       );
@@ -194,12 +187,10 @@ export class MovementsService {
     return {
       id: entry.id,
       fecha: entry.fecha,
-      codigoProducto: entry.codigoProducto,
+      productId: entry.productId,
       descripcion: entry.descripcion,
-      precioUnitario: entry.precioUnitario,
       cantidad: entry.cantidad,
-      responsable: entry.responsable || undefined,
-      area: entry.area || undefined,
+      areaId: entry.areaId,
       createdAt: entry.createdAt,
       updatedAt: entry.updatedAt,
     };
@@ -209,13 +200,12 @@ export class MovementsService {
     return {
       id: exit.id,
       fecha: exit.fecha,
-      codigoProducto: exit.codigoProducto,
+      productId: exit.productId,
       descripcion: exit.descripcion,
-      precioUnitario: exit.precioUnitario,
       cantidad: exit.cantidad,
-      responsable: exit.responsable || undefined,
-      area: exit.area || undefined,
-      proyecto: exit.proyecto || undefined,
+      responsableId: exit.responsableId,
+      areaId: exit.areaId,
+      projectId: exit.projectId,
       createdAt: exit.createdAt,
       updatedAt: exit.updatedAt,
     };
