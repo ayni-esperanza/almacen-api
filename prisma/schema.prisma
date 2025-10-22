@@ -38,24 +38,60 @@ model User {
 model Product {
   id            Int @id @default(autoincrement())
   codigo        String @unique
-  descripcion   String
+  nombre        String
   costoUnitario Float
-  ubicacion     String
+  providerId    Int
+  locationId    Int
+  categoryId    Int
+  unitId        Int
   entradas      Int    @default(0)
   salidas       Int    @default(0) 
   stockActual   Int    @default(0)
-  unidadMedida  String
-  proveedor     String
   costoTotal    Float  @default(0)
-  categoria     String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   // Relations
+  provider        Provider @relation(fields: [providerId], references: [id])
+  location        Location @relation(fields: [locationId], references: [id])
+  category        Category @relation(fields: [categoryId], references: [id])
+  unit            Unit @relation(fields: [unitId], references: [id])
   movementEntries MovementEntry[]
   movementExits   MovementExit[]
 
   @@map("products")
+}
+
+model Provider {
+  id       Int @id @default(autoincrement())
+  nombre   String @unique
+  products Product[]
+
+  @@map("providers")
+}
+
+model Location {
+  id       Int @id @default(autoincrement())
+  nombre   String @unique
+  products Product[]
+
+  @@map("locations")
+}
+
+model Category {
+  id       Int @id @default(autoincrement())
+  nombre   String @unique
+  products Product[]
+
+  @@map("categories")
+}
+
+model Unit {
+  id       Int @id @default(autoincrement())
+  nombre   String @unique
+  products Product[]
+
+  @@map("units")
 }
 
 // === MOVEMENT MODELS ===
