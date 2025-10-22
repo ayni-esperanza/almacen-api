@@ -59,6 +59,65 @@ async function main() {
     });
   }
 
+  // ===== CREAR CATÁLOGOS =====
+
+  // Crear proveedores
+  const proveedores = [
+    'FERRETERIA CENTRAL',
+    'LUBRICANTES SAC',
+    'DISTRIBUIDORA NORTE',
+    'IMPORTACIONES DEL SUR',
+  ];
+  for (const nombre of proveedores) {
+    await prisma.provider.upsert({
+      where: { nombre },
+      update: {},
+      create: { nombre },
+    });
+  }
+
+  // Crear ubicaciones
+  const ubicaciones = [
+    'ALMACEN',
+    'ALMACEN CENTRAL',
+    'DEPOSITO A',
+    'DEPOSITO B',
+  ];
+  for (const nombre of ubicaciones) {
+    await prisma.location.upsert({
+      where: { nombre },
+      update: {},
+      create: { nombre },
+    });
+  }
+
+  // Crear categorías
+  const categorias = [
+    'Herramientas',
+    'Lubricantes',
+    'Ferretería',
+    'Eléctricos',
+    'Repuestos',
+    'Otros',
+  ];
+  for (const nombre of categorias) {
+    await prisma.category.upsert({
+      where: { nombre },
+      update: {},
+      create: { nombre },
+    });
+  }
+
+  // Crear unidades de medida
+  const unidades = ['und', 'lt', 'kg', 'mt', 'caja', 'paquete', 'galón'];
+  for (const nombre of unidades) {
+    await prisma.unit.upsert({
+      where: { nombre },
+      update: {},
+      create: { nombre },
+    });
+  }
+
   // Crear áreas predefinidas
   const areas = [
     'ALMACEN',
@@ -84,43 +143,100 @@ async function main() {
     });
   }
 
-  // Crear productos de ejemplo
+  // Crear proyectos
+  const proyectos = [
+    'Proyecto ABC',
+    'Proyecto XYZ',
+    'Mantenimiento General',
+    'Obra Civil',
+  ];
+  for (const nombre of proyectos) {
+    await prisma.project.upsert({
+      where: { nombre },
+      update: {},
+      create: { nombre },
+    });
+  }
+
+  // Crear responsables
+  const responsables = [
+    'Juan Pérez',
+    'María García',
+    'Carlos López',
+    'Ana Martínez',
+  ];
+  for (const nombre of responsables) {
+    await prisma.responsible.upsert({
+      where: { nombre },
+      update: {},
+      create: { nombre },
+    });
+  }
+
+  // ===== OBTENER IDs DE CATÁLOGOS =====
+  const ferreteriaProvider = await prisma.provider.findUnique({
+    where: { nombre: 'FERRETERIA CENTRAL' },
+  });
+  const lubricantesProvider = await prisma.provider.findUnique({
+    where: { nombre: 'LUBRICANTES SAC' },
+  });
+  const almacenLocation = await prisma.location.findUnique({
+    where: { nombre: 'ALMACEN' },
+  });
+  const herramientasCategory = await prisma.category.findUnique({
+    where: { nombre: 'Herramientas' },
+  });
+  const ferrerteriaCategory = await prisma.category.findUnique({
+    where: { nombre: 'Ferretería' },
+  });
+  const lubricantesCategory = await prisma.category.findUnique({
+    where: { nombre: 'Lubricantes' },
+  });
+  const undUnit = await prisma.unit.findUnique({ where: { nombre: 'und' } });
+  const ltUnit = await prisma.unit.findUnique({ where: { nombre: 'lt' } });
+
+  // ===== CREAR PRODUCTOS =====
   const productos = [
     {
       codigo: 'AF2025',
-      descripcion: 'AFLOJA TODO',
+      nombre: 'AFLOJA TODO',
       costoUnitario: 12.0,
-      ubicacion: 'ALMACEN',
+      stockMinimo: 5,
+      providerId: ferreteriaProvider!.id,
+      locationId: almacenLocation!.id,
+      categoryId: herramientasCategory!.id,
+      unitId: undUnit!.id,
       entradas: 3,
       salidas: 2,
       stockActual: 1,
-      unidadMedida: 'und',
-      proveedor: 'FERRETERIA CENTRAL',
-      costoTotal: 12.0,
+      marca: 'WD-40',
     },
     {
       codigo: 'TU2024',
-      descripcion: 'TUERCA HEXAGONAL 1/2"',
+      nombre: 'TUERCA HEXAGONAL 1/2"',
       costoUnitario: 0.5,
-      ubicacion: 'ALMACEN',
+      stockMinimo: 50,
+      providerId: ferreteriaProvider!.id,
+      locationId: almacenLocation!.id,
+      categoryId: ferrerteriaCategory!.id,
+      unitId: undUnit!.id,
       entradas: 100,
       salidas: 20,
       stockActual: 80,
-      unidadMedida: 'und',
-      proveedor: 'FERRETERIA CENTRAL',
-      costoTotal: 40.0,
     },
     {
       codigo: 'AC2023',
-      descripcion: 'ACEITE HIDRAULICO ISO 68',
+      nombre: 'ACEITE HIDRAULICO ISO 68',
       costoUnitario: 45.0,
-      ubicacion: 'ALMACEN',
+      stockMinimo: 10,
+      providerId: lubricantesProvider!.id,
+      locationId: almacenLocation!.id,
+      categoryId: lubricantesCategory!.id,
+      unitId: ltUnit!.id,
       entradas: 10,
       salidas: 3,
       stockActual: 7,
-      unidadMedida: 'lt',
-      proveedor: 'LUBRICANTES SAC',
-      costoTotal: 315.0,
+      marca: 'Shell',
     },
   ];
 
@@ -133,6 +249,11 @@ async function main() {
   }
 
   console.log('Seed data created successfully!');
+  console.log('- Users created');
+  console.log(
+    '- Catalogs created (Providers, Locations, Categories, Units, Areas, Projects, Responsibles)',
+  );
+  console.log('- Sample products created');
 }
 
 main()

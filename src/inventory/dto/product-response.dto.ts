@@ -7,14 +7,29 @@ export class ProductResponseDto {
   @ApiProperty({ example: 'AF2025', description: 'Unique product code' })
   codigo: string;
 
-  @ApiProperty({ example: 'AFLOJA TODO', description: 'Product description' })
-  descripcion: string;
+  @ApiProperty({ example: 'AFLOJA TODO', description: 'Product name' })
+  nombre: string;
+
+  @ApiPropertyOptional({ example: 'WD-40', description: 'Product brand' })
+  marca?: string;
 
   @ApiProperty({ example: 12.0, description: 'Unit cost' })
   costoUnitario: number;
 
-  @ApiProperty({ example: 'ALMACEN', description: 'Storage location' })
-  ubicacion: string;
+  @ApiProperty({ example: 5, description: 'Minimum stock level' })
+  stockMinimo: number;
+
+  @ApiProperty({ example: 1, description: 'Provider ID' })
+  providerId: number;
+
+  @ApiProperty({ example: 1, description: 'Location ID' })
+  locationId: number;
+
+  @ApiProperty({ example: 1, description: 'Category ID' })
+  categoryId: number;
+
+  @ApiProperty({ example: 1, description: 'Unit of measure ID' })
+  unitId: number;
 
   @ApiProperty({ example: 3, description: 'Total entries' })
   entradas: number;
@@ -25,20 +40,11 @@ export class ProductResponseDto {
   @ApiProperty({ example: 1, description: 'Current stock' })
   stockActual: number;
 
-  @ApiProperty({ example: 'und', description: 'Unit of measure' })
-  unidadMedida: string;
-
-  @ApiProperty({ example: 'FERRETERIA CENTRAL', description: 'Supplier name' })
-  proveedor: string;
-
-  @ApiProperty({ example: 12.0, description: 'Total cost' })
-  costoTotal: number;
-
   @ApiPropertyOptional({
-    example: 'Herramientas',
-    description: 'Product category',
+    example: 'Notes about the product',
+    description: 'Additional observations',
   })
-  categoria?: string;
+  observaciones?: string;
 
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;

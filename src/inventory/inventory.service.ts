@@ -26,23 +26,20 @@ export class InventoryService {
       );
     }
 
-    // Calculate total cost
-    const stockActual = createProductDto.stockActual || 0;
-    const costoTotal = stockActual * createProductDto.costoUnitario;
-
     const product = await this.prisma.product.create({
       data: {
         ...createProductDto,
         entradas: createProductDto.entradas || 0,
         salidas: createProductDto.salidas || 0,
-        stockActual,
-        costoTotal,
+        stockActual: createProductDto.stockActual || 0,
+        stockMinimo: createProductDto.stockMinimo || 0,
       },
     });
 
     return {
       ...product,
-      categoria: product.categoria || undefined,
+      marca: product.marca ?? undefined,
+      observaciones: product.observaciones ?? undefined,
     };
   }
 
@@ -51,8 +48,7 @@ export class InventoryService {
       ? {
           OR: [
             { codigo: { contains: search, mode: 'insensitive' as const } },
-            { descripcion: { contains: search, mode: 'insensitive' as const } },
-            { proveedor: { contains: search, mode: 'insensitive' as const } },
+            { nombre: { contains: search, mode: 'insensitive' as const } },
           ],
         }
       : {};
@@ -64,7 +60,8 @@ export class InventoryService {
 
     return products.map((product) => ({
       ...product,
-      categoria: product.categoria || undefined,
+      marca: product.marca ?? undefined,
+      observaciones: product.observaciones ?? undefined,
     }));
   }
 
@@ -79,7 +76,8 @@ export class InventoryService {
 
     return {
       ...product,
-      categoria: product.categoria || undefined,
+      marca: product.marca ?? undefined,
+      observaciones: product.observaciones ?? undefined,
     };
   }
 
@@ -94,7 +92,8 @@ export class InventoryService {
 
     return {
       ...product,
-      categoria: product.categoria || undefined,
+      marca: product.marca ?? undefined,
+      observaciones: product.observaciones ?? undefined,
     };
   }
 
@@ -120,30 +119,15 @@ export class InventoryService {
       }
     }
 
-    // Calculate new total cost if relevant fields are updated
-    let costoTotal = existingProduct.costoTotal;
-    if (
-      updateProductDto.stockActual !== undefined ||
-      updateProductDto.costoUnitario !== undefined
-    ) {
-      const newStockActual =
-        updateProductDto.stockActual ?? existingProduct.stockActual;
-      const newCostoUnitario =
-        updateProductDto.costoUnitario ?? existingProduct.costoUnitario;
-      costoTotal = newStockActual * newCostoUnitario;
-    }
-
     const product = await this.prisma.product.update({
       where: { id },
-      data: {
-        ...updateProductDto,
-        costoTotal,
-      },
+      data: updateProductDto,
     });
 
     return {
       ...product,
-      categoria: product.categoria || undefined,
+      marca: product.marca ?? undefined,
+      observaciones: product.observaciones ?? undefined,
     };
   }
 
@@ -174,7 +158,6 @@ export class InventoryService {
     const newEntradas = product.entradas + entradas;
     const newSalidas = product.salidas + salidas;
     const newStockActual = product.stockActual + entradas - salidas;
-    const newCostoTotal = newStockActual * product.costoUnitario;
 
     const updatedProduct = await this.prisma.product.update({
       where: { codigo },
@@ -182,13 +165,13 @@ export class InventoryService {
         entradas: newEntradas,
         salidas: newSalidas,
         stockActual: newStockActual,
-        costoTotal: newCostoTotal,
       },
     });
 
     return {
       ...updatedProduct,
-      categoria: updatedProduct.categoria || undefined,
+      marca: updatedProduct.marca ?? undefined,
+      observaciones: updatedProduct.observaciones ?? undefined,
     };
   }
 }

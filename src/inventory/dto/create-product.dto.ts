@@ -13,20 +13,46 @@ export class CreateProductDto {
   @IsNotEmpty()
   codigo: string;
 
-  @ApiProperty({ example: 'AFLOJA TODO', description: 'Product description' })
+  @ApiProperty({ example: 'AFLOJA TODO', description: 'Product name' })
   @IsString()
   @IsNotEmpty()
-  descripcion: string;
+  nombre: string;
+
+  @ApiPropertyOptional({ example: 'WD-40', description: 'Product brand' })
+  @IsString()
+  @IsOptional()
+  marca?: string;
 
   @ApiProperty({ example: 12.0, description: 'Unit cost' })
   @IsNumber()
   @Min(0)
   costoUnitario: number;
 
-  @ApiProperty({ example: 'ALMACEN', description: 'Storage location' })
-  @IsString()
-  @IsNotEmpty()
-  ubicacion: string;
+  @ApiProperty({ example: 5, description: 'Minimum stock level', default: 0 })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  stockMinimo?: number;
+
+  @ApiProperty({ example: 1, description: 'Provider ID' })
+  @IsNumber()
+  @Min(1)
+  providerId: number;
+
+  @ApiProperty({ example: 1, description: 'Location ID' })
+  @IsNumber()
+  @Min(1)
+  locationId: number;
+
+  @ApiProperty({ example: 1, description: 'Category ID' })
+  @IsNumber()
+  @Min(1)
+  categoryId: number;
+
+  @ApiProperty({ example: 1, description: 'Unit of measure ID' })
+  @IsNumber()
+  @Min(1)
+  unitId: number;
 
   @ApiProperty({ example: 3, description: 'Total entries', default: 0 })
   @IsNumber()
@@ -46,31 +72,11 @@ export class CreateProductDto {
   @IsOptional()
   stockActual?: number;
 
-  @ApiProperty({ example: 'und', description: 'Unit of measure' })
-  @IsString()
-  @IsNotEmpty()
-  unidadMedida: string;
-
-  @ApiProperty({ example: 'FERRETERIA CENTRAL', description: 'Supplier name' })
-  @IsString()
-  @IsNotEmpty()
-  proveedor: string;
-
-  @ApiProperty({
-    example: 12.0,
-    description: 'Total cost (calculated)',
-    default: 0,
-  })
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  costoTotal?: number;
-
   @ApiPropertyOptional({
-    example: 'Herramientas',
-    description: 'Product category',
+    example: 'Notes about the product',
+    description: 'Additional observations',
   })
   @IsString()
   @IsOptional()
-  categoria?: string;
+  observaciones?: string;
 }
