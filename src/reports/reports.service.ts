@@ -240,6 +240,7 @@ export class ReportsService {
 
   async getInventoryReport(): Promise<any> {
     const products = await this.prisma.product.findMany({
+      include: { provider: true },
       orderBy: { codigo: 'asc' },
     });
 
@@ -264,7 +265,7 @@ export class ReportsService {
       stockActual: product.stockActual,
       stockMinimo: product.stockMinimo,
       unidadMedida: product.unidadMedida,
-      proveedor: product.proveedor,
+      proveedor: product.provider?.name || 'Sin proveedor',
       marca: product.marca,
       costoTotal: product.costoTotal,
       categoria: product.categoria,
@@ -336,6 +337,7 @@ export class ReportsService {
     // Obtener todos los productos
     const products = await this.prisma.product.findMany({
       where,
+      include: { provider: true },
       orderBy: { codigo: 'asc' },
     });
 
@@ -358,7 +360,7 @@ export class ReportsService {
         stockMinimo,
         ubicacion: product.ubicacion,
         categoria: product.categoria || 'Sin categoría',
-        proveedor: product.proveedor,
+        proveedor: product.provider?.name || 'Sin proveedor',
         ultimaActualizacion: product.updatedAt.toISOString().split('T')[0],
         estado,
       };
@@ -385,6 +387,7 @@ export class ReportsService {
   async getStockAlert(id: string): Promise<StockAlert | null> {
     const product = await this.prisma.product.findUnique({
       where: { id: parseInt(id) },
+      include: { provider: true },
     });
 
     if (!product) {
@@ -408,14 +411,16 @@ export class ReportsService {
       stockMinimo,
       ubicacion: product.ubicacion,
       categoria: product.categoria || 'Sin categoría',
-      proveedor: product.proveedor,
+      proveedor: product.provider?.name || 'Sin proveedor',
       ultimaActualizacion: product.updatedAt.toISOString().split('T')[0],
       estado,
     };
   }
 
   async getStockAlertStatistics(): Promise<StockAlertStatistics> {
-    const products = await this.prisma.product.findMany();
+    const products = await this.prisma.product.findMany({
+      include: { provider: true },
+    });
     const stockMinimo = 10;
 
     let total = 0;

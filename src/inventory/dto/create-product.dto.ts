@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsNotEmpty,
   Min,
+  IsInt,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -57,10 +58,10 @@ export class CreateProductDto {
   @IsNotEmpty()
   unidadMedida: string;
 
-  @ApiProperty({ example: 'FERRETERIA CENTRAL', description: 'Supplier name' })
-  @IsString()
+  @ApiProperty({ example: 1, description: 'Provider ID' })
+  @IsInt()
   @IsNotEmpty()
-  proveedor: string;
+  providerId: number;
 
   @ApiPropertyOptional({ example: 'WD-40', description: 'Product brand' })
   @IsString()

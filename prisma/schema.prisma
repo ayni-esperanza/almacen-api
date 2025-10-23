@@ -48,7 +48,7 @@ model Product {
   stockActual   Int    @default(0)
   stockMinimo   Int    @default(0)
   unidadMedida  String
-  proveedor     String
+  providerId    Int    // Foreign key
   marca         String?
   costoTotal    Float  @default(0)
   categoria     String?
@@ -56,6 +56,7 @@ model Product {
   updatedAt     DateTime @updatedAt
 
   // Relations
+  provider        Provider @relation(fields: [providerId], references: [id])
   movementEntries MovementEntry[]
   movementExits   MovementExit[]
 
@@ -140,6 +141,9 @@ model Provider {
   photoUrl  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Relations
+  products  Product[]
 
   @@map("providers")
 }

@@ -53,7 +53,11 @@ export class InventoryService {
           OR: [
             { codigo: { contains: search, mode: 'insensitive' as const } },
             { nombre: { contains: search, mode: 'insensitive' as const } },
-            { proveedor: { contains: search, mode: 'insensitive' as const } },
+            {
+              provider: {
+                name: { contains: search, mode: 'insensitive' as const },
+              },
+            },
             { marca: { contains: search, mode: 'insensitive' as const } },
           ],
         }
@@ -61,6 +65,7 @@ export class InventoryService {
 
     const products = await this.prisma.product.findMany({
       where,
+      include: { provider: true },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -74,6 +79,7 @@ export class InventoryService {
   async findOne(id: number): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findUnique({
       where: { id },
+      include: { provider: true },
     });
 
     if (!product) {

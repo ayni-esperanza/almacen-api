@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ProviderResponseDto } from '../../providers/dto/provider-response.dto';
 
 export class ProductResponseDto {
   @ApiProperty({ example: 1, description: 'Product ID' })
@@ -31,8 +32,13 @@ export class ProductResponseDto {
   @ApiProperty({ example: 'und', description: 'Unit of measure' })
   unidadMedida: string;
 
-  @ApiProperty({ example: 'FERRETERIA CENTRAL', description: 'Supplier name' })
-  proveedor: string;
+  @ApiProperty({ example: 1, description: 'Provider ID' })
+  providerId: number;
+
+  @ApiProperty({ description: 'Proveedor asociado', required: false })
+  provider?: Omit<ProviderResponseDto, 'photoUrl'> & {
+    photoUrl: string | null;
+  };
 
   @ApiPropertyOptional({ example: 'WD-40', description: 'Product brand' })
   marca?: string;
