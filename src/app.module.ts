@@ -7,6 +7,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { MovementsModule } from './movements/movements.module';
 import { EquipmentModule } from './equipment/equipment.module';
 import { ReportsModule } from './reports/reports.module';
+import { ProvidersModule } from './providers/providers.module';
 import { PrismaService } from './common/services/prisma.service';
 
 @Module({
@@ -20,6 +21,7 @@ import { PrismaService } from './common/services/prisma.service';
     MovementsModule,
     EquipmentModule,
     ReportsModule,
+    ProvidersModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
