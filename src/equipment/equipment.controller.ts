@@ -41,7 +41,9 @@ export class EquipmentController {
     description: 'Equipment report created successfully',
     type: EquipmentResponseDto,
   })
-  create(@Body() createEquipmentDto: CreateEquipmentDto): Promise<EquipmentResponseDto> {
+  create(
+    @Body() createEquipmentDto: CreateEquipmentDto,
+  ): Promise<EquipmentResponseDto> {
     return this.equipmentService.create(createEquipmentDto);
   }
 
@@ -56,6 +58,24 @@ export class EquipmentController {
   })
   findAll(@Query('q') search?: string): Promise<EquipmentResponseDto[]> {
     return this.equipmentService.findAll(search);
+  }
+
+  @Get('code/:serieCodigo')
+  @RequirePermissions(Permission.EQUIPMENT_READ)
+  @ApiOperation({ summary: 'Get equipment by serial code' })
+  @ApiResponse({
+    status: 200,
+    description: 'Equipment retrieved successfully',
+    type: EquipmentResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Equipment not found',
+  })
+  async findByCode(
+    @Param('serieCodigo') serieCodigo: string,
+  ): Promise<EquipmentResponseDto | null> {
+    return this.equipmentService.findByCode(serieCodigo);
   }
 
   @Get(':id')

@@ -44,7 +44,9 @@ export class InventoryController {
     status: 409,
     description: 'Product code already exists',
   })
-  create(@Body() createProductDto: CreateProductDto): Promise<ProductResponseDto> {
+  create(
+    @Body() createProductDto: CreateProductDto,
+  ): Promise<ProductResponseDto> {
     return this.inventoryService.create(createProductDto);
   }
 
@@ -83,6 +85,22 @@ export class InventoryController {
   })
   search(@Query('q') query: string): Promise<ProductResponseDto[]> {
     return this.inventoryService.findAll(query);
+  }
+
+  @Get('products/code/:codigo')
+  @RequirePermissions(Permission.INVENTORY_READ)
+  @ApiOperation({ summary: 'Get product by code' })
+  @ApiResponse({
+    status: 200,
+    description: 'Product retrieved successfully',
+    type: ProductResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Product not found',
+  })
+  findByCode(@Param('codigo') codigo: string): Promise<ProductResponseDto> {
+    return this.inventoryService.findByCode(codigo);
   }
 
   @Get('products/:id')

@@ -9,7 +9,9 @@ import { EquipmentResponseDto } from './dto/equipment-response.dto';
 export class EquipmentService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createEquipmentDto: CreateEquipmentDto): Promise<EquipmentResponseDto> {
+  async create(
+    createEquipmentDto: CreateEquipmentDto,
+  ): Promise<EquipmentResponseDto> {
     const equipment = await this.prisma.equipmentReport.create({
       data: {
         ...createEquipmentDto,
@@ -28,7 +30,9 @@ export class EquipmentService {
             { equipo: { contains: search, mode: 'insensitive' as const } },
             { serieCodigo: { contains: search, mode: 'insensitive' as const } },
             { responsable: { contains: search, mode: 'insensitive' as const } },
-            { areaProyecto: { contains: search, mode: 'insensitive' as const } },
+            {
+              areaProyecto: { contains: search, mode: 'insensitive' as const },
+            },
           ],
         }
       : {};
@@ -38,7 +42,7 @@ export class EquipmentService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return equipment.map(item => this.mapToResponse(item));
+    return equipment.map((item) => this.mapToResponse(item));
   }
 
   async findOne(id: number): Promise<EquipmentResponseDto> {
@@ -53,12 +57,31 @@ export class EquipmentService {
     return this.mapToResponse(equipment);
   }
 
-  async update(id: number, updateEquipmentDto: UpdateEquipmentDto): Promise<EquipmentResponseDto> {
+  async findByCode(serieCodigo: string): Promise<EquipmentResponseDto | null> {
+    // Find the most recent equipment report with this code
+    const equipment = await this.prisma.equipmentReport.findFirst({
+      where: { serieCodigo },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!equipment) {
+      return null;
+    }
+
+    return this.mapToResponse(equipment);
+  }
+
+  async update(
+    id: number,
+    updateEquipmentDto: UpdateEquipmentDto,
+  ): Promise<EquipmentResponseDto> {
     await this.findOne(id); // Check if exists
 
     const updateData: any = { ...updateEquipmentDto };
     if (updateEquipmentDto.estadoEquipo) {
-      updateData.estadoEquipo = this.mapEstadoEquipo(updateEquipmentDto.estadoEquipo);
+      updateData.estadoEquipo = this.mapEstadoEquipo(
+        updateEquipmentDto.estadoEquipo,
+      );
     }
 
     const equipment = await this.prisma.equipmentReport.update({
@@ -79,7 +102,10 @@ export class EquipmentService {
     return { message: 'Equipment deleted successfully' };
   }
 
-  async registerReturn(id: number, returnEquipmentDto: ReturnEquipmentDto): Promise<EquipmentResponseDto> {
+  async registerReturn(
+    id: number,
+    returnEquipmentDto: ReturnEquipmentDto,
+  ): Promise<EquipmentResponseDto> {
     await this.findOne(id); // Check if exists
 
     const equipment = await this.prisma.equipmentReport.update({
@@ -110,7 +136,9 @@ export class EquipmentService {
       firma: equipment.firma,
       fechaRetorno: equipment.fechaRetorno || undefined,
       horaRetorno: equipment.horaRetorno || undefined,
-      estadoRetorno: equipment.estadoRetorno ? this.mapEstadoEquipoToFrontend(equipment.estadoRetorno) : undefined,
+      estadoRetorno: equipment.estadoRetorno
+        ? this.mapEstadoEquipoToFrontend(equipment.estadoRetorno)
+        : undefined,
       firmaRetorno: equipment.firmaRetorno || undefined,
       createdAt: equipment.createdAt,
       updatedAt: equipment.updatedAt,
@@ -120,22 +148,22 @@ export class EquipmentService {
   // Helper methods to map between frontend and Prisma enum formats
   private mapEstadoEquipo(estado: string): any {
     const mapping = {
-      'Bueno': 'Bueno',
-      'Regular': 'Regular',
-      'Malo': 'Malo',
+      Bueno: 'Bueno',
+      Regular: 'Regular',
+      Malo: 'Malo',
       'En Reparación': 'En_Reparacion',
-      'Dañado': 'Danado'
+      Dañado: 'Danado',
     };
     return mapping[estado] || estado;
   }
 
   private mapEstadoEquipoToFrontend(estado: any): string {
     const mapping = {
-      'Bueno': 'Bueno',
-      'Regular': 'Regular',
-      'Malo': 'Malo',
-      'En_Reparacion': 'En Reparación',
-      'Danado': 'Dañado'
+      Bueno: 'Bueno',
+      Regular: 'Regular',
+      Malo: 'Malo',
+      En_Reparacion: 'En Reparación',
+      Danado: 'Dañado',
     };
     return mapping[estado] || estado;
   }

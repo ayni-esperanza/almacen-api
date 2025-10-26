@@ -96,6 +96,7 @@ export class InventoryService {
   async findByCode(codigo: string): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findUnique({
       where: { codigo },
+      include: { provider: true },
     });
 
     if (!product) {
