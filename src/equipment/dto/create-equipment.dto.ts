@@ -6,7 +6,7 @@ export enum EstadoEquipo {
   Regular = 'Regular',
   Malo = 'Malo',
   En_Reparacion = 'En Reparación',
-  Danado = 'Dañado'
+  Danado = 'Dañado',
 }
 
 export class CreateEquipmentDto {
@@ -25,10 +25,10 @@ export class CreateEquipmentDto {
   @Min(1)
   cantidad: number;
 
-  @ApiProperty({ 
-    enum: EstadoEquipo, 
-    example: EstadoEquipo.Bueno, 
-    description: 'Equipment condition' 
+  @ApiProperty({
+    enum: EstadoEquipo,
+    example: EstadoEquipo.Bueno,
+    description: 'Equipment condition',
   })
   @IsEnum(EstadoEquipo)
   estadoEquipo: EstadoEquipo;
@@ -38,7 +38,10 @@ export class CreateEquipmentDto {
   @IsNotEmpty()
   responsable: string;
 
-  @ApiProperty({ example: '25/08/2025', description: 'Exit date in DD/MM/YYYY format' })
+  @ApiProperty({
+    example: '25/08/2025',
+    description: 'Exit date in DD/MM/YYYY format',
+  })
   @IsString()
   @IsNotEmpty()
   fechaSalida: string;
@@ -52,9 +55,4 @@ export class CreateEquipmentDto {
   @IsString()
   @IsNotEmpty()
   areaProyecto: string;
-
-  @ApiProperty({ example: 'J.Pérez', description: 'Responsible person signature' })
-  @IsString()
-  @IsNotEmpty()
-  firma: string;
 }

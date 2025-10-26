@@ -1,17 +1,18 @@
-# 🏭 AYNI Almacén API
+# AYNI Almacén API
 
 Sistema de Inventario AYNI - API completa para gestión de productos, movimientos, equipos y reportes desarrollada con NestJS, Prisma y PostgreSQL.
 
-## 🎯 Descripción
+## Descripción
 
 API REST para el sistema de inventario AYNI que proporciona gestión completa de:
+
 - **Productos/Inventario**: CRUD completo con control de stock
 - **Movimientos**: Entradas y salidas con actualización automática de stock
 - **Equipos**: Gestión de herramientas con control de salida/retorno
 - **Reportes**: Generación de reportes personalizables
 - **Autenticación**: Sistema JWT con protección de rutas
 
-## 🏗️ Arquitectura Técnica
+## Arquitectura Técnica
 
 - **Framework**: NestJS 11
 - **Base de Datos**: PostgreSQL con Prisma ORM
@@ -20,9 +21,10 @@ API REST para el sistema de inventario AYNI que proporciona gestión completa de
 - **Documentación**: Swagger/OpenAPI
 - **Arquitectura**: Modular por features
 
-## 📦 Instalación
+## Instalación
 
 ### Prerrequisitos
+
 - Node.js 18+
 - PostgreSQL 14+
 - npm o yarn
@@ -30,17 +32,20 @@ API REST para el sistema de inventario AYNI que proporciona gestión completa de
 ### Pasos de instalación
 
 1. **Clonar repositorio**
+
 ```bash
 git clone <repository-url>
 cd ayni-almacen-api
 ```
 
 2. **Instalar dependencias**
+
 ```bash
 npm install
 ```
 
 3. **Configurar base de datos**
+
 ```bash
 # Copiar archivo de configuración
 cp env.example .env
@@ -50,19 +55,36 @@ DATABASE_URL="postgresql://username:password@localhost:5432/ayni_almacen?schema=
 JWT_SECRET="your-super-secret-jwt-key"
 ```
 
-4. **Configurar Prisma**
+4. **Configurar Prisma (solo cuando se clona por primera vez)**
+
 ```bash
-# Generar cliente Prisma
-npm run db:generate
-
-# Aplicar migraciones
-npm run db:push
-
-# Poblar datos iniciales
+npx prisma generate
+npx prisma migrate dev
 npm run db:seed
 ```
 
-## 🚀 Ejecutar el proyecto
+5. **Después de git pull (desarrollo)**
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+```
+
+6. **Después de git pull (producción)**
+
+```bash
+npx prisma generate
+npx prisma migrate deploy
+npm run start:prod
+```
+
+# Abrir servidor para probar cambios en el prisma studio
+
+```bash
+npx prisma studio
+```
+
+## Ejecutar el proyecto
 
 ```bash
 # Desarrollo
@@ -76,16 +98,19 @@ npm run start:debug
 ```
 
 La API estará disponible en:
-- **Servidor**: http://localhost:3000
-- **Documentación Swagger**: http://localhost:3000/api
 
-## 🔐 Autenticación
+- **Servidor**: <http://localhost:3000>
+- **Documentación Swagger**: <http://localhost:3000/api>
+
+## Autenticación
 
 ### Credenciales por defecto
+
 - **Usuario**: `admin`
 - **Contraseña**: `admin123`
 
 ### Uso de JWT
+
 ```bash
 # 1. Login
 POST /auth/login
@@ -98,14 +123,16 @@ POST /auth/login
 Authorization: Bearer <jwt-token>
 ```
 
-## 📊 Endpoints Principales
+## Endpoints Principales
 
 ### Autenticación
+
 - `POST /auth/login` - Iniciar sesión
 - `POST /auth/logout` - Cerrar sesión
 - `GET /auth/me` - Obtener perfil actual
 
 ### Inventario
+
 - `GET /inventory/products` - Listar productos
 - `POST /inventory/products` - Crear producto
 - `GET /inventory/products/:id` - Obtener producto
@@ -114,6 +141,7 @@ Authorization: Bearer <jwt-token>
 - `GET /inventory/areas` - Listar áreas
 
 ### Movimientos
+
 - `GET /movements/entries` - Listar entradas
 - `POST /movements/entries` - Crear entrada
 - `GET /movements/exits` - Listar salidas
@@ -121,6 +149,7 @@ Authorization: Bearer <jwt-token>
 - `PATCH /movements/exits/:id/quantity` - Actualizar cantidad
 
 ### Equipos
+
 - `GET /equipment` - Listar equipos
 - `POST /equipment` - Crear reporte de equipo
 - `GET /equipment/:id` - Obtener equipo
@@ -129,15 +158,17 @@ Authorization: Bearer <jwt-token>
 - `PATCH /equipment/:id/return` - Registrar retorno
 
 ### Reportes
+
 - `GET /reports/exits` - Reporte de salidas
 - `GET /reports/entries` - Reporte de entradas
 - `GET /reports/equipment` - Reporte de equipos
 - `GET /reports/inventory` - Reporte de inventario
 - `POST /reports/generate` - Generar reporte personalizado
 
-## 📋 Modelos de Datos
+## Modelos de Datos
 
 ### Producto
+
 ```typescript
 {
   id: string;
@@ -156,6 +187,7 @@ Authorization: Bearer <jwt-token>
 ```
 
 ### Movimiento de Entrada
+
 ```typescript
 {
   id: string;
@@ -170,6 +202,7 @@ Authorization: Bearer <jwt-token>
 ```
 
 ### Movimiento de Salida
+
 ```typescript
 {
   id: string;
@@ -185,6 +218,7 @@ Authorization: Bearer <jwt-token>
 ```
 
 ### Equipo
+
 ```typescript
 {
   id: string;
@@ -204,7 +238,7 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
-## 🗂️ Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 src/
@@ -223,23 +257,7 @@ src/
 └── main.ts                 # Punto de entrada
 ```
 
-## 🛠️ Scripts de Base de Datos
-
-```bash
-# Generar cliente Prisma
-npm run db:generate
-
-# Aplicar cambios a BD
-npm run db:push
-
-# Crear migración
-npm run db:migrate
-
-# Poblar datos iniciales
-npm run db:seed
-```
-
-## 🧪 Testing
+## Testing
 
 ```bash
 # Tests unitarios
@@ -252,23 +270,25 @@ npm run test:e2e
 npm run test:cov
 ```
 
-## 🌐 CORS y Frontend
+## CORS y Frontend
 
 La API está configurada para trabajar con el frontend React en:
+
 - `http://localhost:5173` (Vite dev server)
 - `http://localhost:3000` (build production)
 
-## 📚 Documentación API
+## Documentación API
 
-Accede a la documentación Swagger en: http://localhost:3000/api
+Accede a la documentación Swagger en: <http://localhost:3000/api>
 
 Incluye:
+
 - Esquemas de datos completos
 - Ejemplos de requests/responses
 - Autenticación integrada
 - Testing de endpoints en vivo
 
-## 🔧 Variables de Entorno
+## Variables de Entorno
 
 ```env
 DATABASE_URL="postgresql://user:pass@localhost:5432/ayni_almacen"
@@ -278,14 +298,6 @@ PORT=3000
 NODE_ENV="development"
 ```
 
-## 🤝 Contribuir
+## Licencia
 
-1. Fork del proyecto
-2. Crear feature branch (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit cambios (`git commit -am 'Agregar nueva funcionalidad'`)
-4. Push al branch (`git push origin feature/nueva-funcionalidad`)
-5. Crear Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT.
+En discusion

@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { EquipmentService } from './equipment.service';
 import { EquipmentController } from './equipment.controller';
 import { PrismaService } from '../common/services/prisma.service';
+import { InventoryModule } from '../inventory/inventory.module';
 
 @Module({
+  imports: [InventoryModule],
   controllers: [EquipmentController],
   providers: [EquipmentService, PrismaService],
   exports: [EquipmentService],

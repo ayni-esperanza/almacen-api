@@ -3,7 +3,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EstadoEquipo } from './create-equipment.dto';
 
 export class ReturnEquipmentDto {
-  @ApiProperty({ example: '25/08/2025', description: 'Return date in DD/MM/YYYY format' })
+  @ApiProperty({
+    example: '25/08/2025',
+    description: 'Return date in DD/MM/YYYY format',
+  })
   @IsString()
   @IsNotEmpty()
   fechaRetorno: string;
@@ -13,16 +16,19 @@ export class ReturnEquipmentDto {
   @IsNotEmpty()
   horaRetorno: string;
 
-  @ApiProperty({ 
-    enum: EstadoEquipo, 
-    example: EstadoEquipo.Bueno, 
-    description: 'Equipment condition upon return' 
+  @ApiProperty({
+    enum: EstadoEquipo,
+    example: EstadoEquipo.Bueno,
+    description: 'Equipment condition upon return',
   })
   @IsEnum(EstadoEquipo)
   estadoRetorno: EstadoEquipo;
 
-  @ApiPropertyOptional({ example: 'J.Pérez', description: 'Return signature' })
+  @ApiPropertyOptional({
+    example: 'Juan Pérez',
+    description: 'Person responsible for return',
+  })
   @IsString()
   @IsOptional()
-  firmaRetorno?: string;
+  responsableRetorno?: string;
 }

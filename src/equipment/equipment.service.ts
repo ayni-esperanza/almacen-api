@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/services/prisma.service';
+import { InventoryService } from '../inventory/inventory.service';
 import { CreateEquipmentDto } from './dto/create-equipment.dto';
 import { UpdateEquipmentDto } from './dto/update-equipment.dto';
 import { ReturnEquipmentDto } from './dto/return-equipment.dto';
@@ -7,11 +8,26 @@ import { EquipmentResponseDto } from './dto/equipment-response.dto';
 
 @Injectable()
 export class EquipmentService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private inventoryService: InventoryService,
+  ) {}
 
   async create(
     createEquipmentDto: CreateEquipmentDto,
   ): Promise<EquipmentResponseDto> {
+    // Verify product exists and has enough stock
+    const product = await this.inventoryService.findByCode(
+      createEquipmentDto.serieCodigo,
+    );
+
+    if (product.stockActual < createEquipmentDto.cantidad) {
+      throw new NotFoundException(
+        `Insufficient stock. Available: ${product.stockActual}, Requested: ${createEquipmentDto.cantidad}`,
+      );
+    }
+
+    // Create equipment report
     const equipment = await this.prisma.equipmentReport.create({
       data: {
         ...createEquipmentDto,
@@ -19,6 +35,13 @@ export class EquipmentService {
         estadoEquipo: this.mapEstadoEquipo(createEquipmentDto.estadoEquipo),
       },
     });
+
+    // Update product stock (reduce it)
+    await this.inventoryService.updateStock(
+      createEquipmentDto.serieCodigo,
+      0,
+      createEquipmentDto.cantidad,
+    );
 
     return this.mapToResponse(equipment);
   }
@@ -114,7 +137,7 @@ export class EquipmentService {
         fechaRetorno: returnEquipmentDto.fechaRetorno,
         horaRetorno: returnEquipmentDto.horaRetorno,
         estadoRetorno: this.mapEstadoEquipo(returnEquipmentDto.estadoRetorno),
-        firmaRetorno: returnEquipmentDto.firmaRetorno,
+        responsableRetorno: returnEquipmentDto.responsableRetorno,
       },
     });
 

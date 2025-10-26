@@ -218,13 +218,12 @@ export class ReportsService {
       fechaSalida: item.fechaSalida,
       horaSalida: item.horaSalida,
       areaProyecto: item.areaProyecto,
-      firma: item.firma,
       fechaRetorno: item.fechaRetorno,
       horaRetorno: item.horaRetorno,
       estadoRetorno: item.estadoRetorno
         ? this.mapEstadoEquipoToFrontend(item.estadoRetorno)
         : undefined,
-      firmaRetorno: item.firmaRetorno,
+      responsableRetorno: item.responsableRetorno,
     }));
 
     const summary = {

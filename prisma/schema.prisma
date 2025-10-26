@@ -120,11 +120,10 @@ model EquipmentReport {
   fechaSalida     String
   horaSalida      String
   areaProyecto    String
-  firma           String
   fechaRetorno    String?
   horaRetorno     String?
   estadoRetorno   EstadoEquipo?
-  firmaRetorno    String?
+  responsableRetorno String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
