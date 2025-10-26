@@ -19,6 +19,7 @@ import { MovementsService } from './movements.service';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { CreateExitDto } from './dto/create-exit.dto';
 import { UpdateEntryDto } from './dto/update-entry.dto';
+import { UpdateExitDto } from './dto/update-exit.dto';
 import { UpdateExitQuantityDto } from './dto/update-exit-quantity.dto';
 import {
   MovementEntryResponseDto,
@@ -142,6 +143,29 @@ export class MovementsController {
     @Body() updateEntryDto: UpdateEntryDto,
   ): Promise<MovementEntryResponseDto> {
     return this.movementsService.updateEntry(+id, updateEntryDto);
+  }
+
+  @Patch('exits/:id')
+  @RequirePermissions(Permission.MOVEMENTS_UPDATE)
+  @ApiOperation({ summary: 'Update exit movement' })
+  @ApiResponse({
+    status: 200,
+    description: 'Exit updated successfully',
+    type: MovementExitResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid data or insufficient stock for quantity increase',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Exit movement not found',
+  })
+  updateExit(
+    @Param('id') id: string,
+    @Body() updateExitDto: UpdateExitDto,
+  ): Promise<MovementExitResponseDto> {
+    return this.movementsService.updateExit(+id, updateExitDto);
   }
 
   @Patch('exits/:id/quantity')

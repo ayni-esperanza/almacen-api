@@ -8,6 +8,7 @@ import { InventoryService } from '../inventory/inventory.service';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { CreateExitDto } from './dto/create-exit.dto';
 import { UpdateEntryDto } from './dto/update-entry.dto';
+import { UpdateExitDto } from './dto/update-exit.dto';
 import { UpdateExitQuantityDto } from './dto/update-exit-quantity.dto';
 import {
   MovementEntryResponseDto,
@@ -235,6 +236,51 @@ export class MovementsService {
         0,
       );
     }
+
+    return this.mapExitToResponse(updatedExit);
+  }
+
+  async updateExit(
+    id: number,
+    updateExitDto: UpdateExitDto,
+  ): Promise<MovementExitResponseDto> {
+    const existingExit = await this.findExitById(id);
+
+    // If quantity is being updated, adjust stock
+    if (
+      updateExitDto.cantidad !== undefined &&
+      updateExitDto.cantidad !== existingExit.cantidad
+    ) {
+      const product = await this.inventoryService.findByCode(
+        existingExit.codigoProducto,
+      );
+      const quantityDifference = updateExitDto.cantidad - existingExit.cantidad;
+
+      if (quantityDifference > 0 && product.stockActual < quantityDifference) {
+        throw new BadRequestException(
+          `Insufficient stock for quantity increase. Available: ${product.stockActual}, Required: ${quantityDifference}`,
+        );
+      }
+
+      if (quantityDifference > 0) {
+        await this.inventoryService.updateStock(
+          existingExit.codigoProducto,
+          0,
+          quantityDifference,
+        );
+      } else if (quantityDifference < 0) {
+        await this.inventoryService.updateStock(
+          existingExit.codigoProducto,
+          Math.abs(quantityDifference),
+          0,
+        );
+      }
+    }
+
+    const updatedExit = await this.prisma.movementExit.update({
+      where: { id },
+      data: updateExitDto,
+    });
 
     return this.mapExitToResponse(updatedExit);
   }
