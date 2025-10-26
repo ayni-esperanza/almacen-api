@@ -177,6 +177,27 @@ export class InventoryService {
     });
   }
 
+  async createArea(nombre: string): Promise<{ nombre: string }> {
+    return this.prisma.area.create({
+      data: { nombre },
+      select: { nombre: true },
+    });
+  }
+
+  async getCategorias(): Promise<{ nombre: string }[]> {
+    return this.prisma.categoria.findMany({
+      select: { nombre: true },
+      orderBy: { nombre: 'asc' },
+    });
+  }
+
+  async createCategoria(nombre: string): Promise<{ nombre: string }> {
+    return this.prisma.categoria.create({
+      data: { nombre },
+      select: { nombre: true },
+    });
+  }
+
   async updateStock(
     codigo: string,
     entradas: number,

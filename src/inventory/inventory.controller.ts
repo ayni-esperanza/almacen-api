@@ -74,6 +74,49 @@ export class InventoryController {
     return this.inventoryService.getAreas();
   }
 
+  @Post('areas')
+  @RequirePermissions(Permission.INVENTORY_CREATE)
+  @ApiOperation({ summary: 'Create a new area' })
+  @ApiResponse({
+    status: 201,
+    description: 'Area created successfully',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Area already exists',
+  })
+  createArea(@Body() body: { nombre: string }): Promise<{ nombre: string }> {
+    return this.inventoryService.createArea(body.nombre);
+  }
+
+  @Get('categorias')
+  @RequirePermissions(Permission.INVENTORY_READ)
+  @ApiOperation({ summary: 'Get all available categories' })
+  @ApiResponse({
+    status: 200,
+    description: 'Categories retrieved successfully',
+  })
+  getCategorias(): Promise<{ nombre: string }[]> {
+    return this.inventoryService.getCategorias();
+  }
+
+  @Post('categorias')
+  @RequirePermissions(Permission.INVENTORY_CREATE)
+  @ApiOperation({ summary: 'Create a new category' })
+  @ApiResponse({
+    status: 201,
+    description: 'Category created successfully',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Category already exists',
+  })
+  createCategoria(
+    @Body() body: { nombre: string },
+  ): Promise<{ nombre: string }> {
+    return this.inventoryService.createCategoria(body.nombre);
+  }
+
   @Get('products/search')
   @RequirePermissions(Permission.INVENTORY_READ)
   @ApiOperation({ summary: 'Search products' })

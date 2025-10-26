@@ -155,3 +155,10 @@ model Area {
 
   @@map("areas")
 }
+
+model Categoria {
+  id     Int @id @default(autoincrement())
+  nombre String @unique
+
+  @@map("categorias")
+}
