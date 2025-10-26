@@ -4,6 +4,26 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
+  // Crear áreas predeterminadas
+  const areas = ['1', '2', '3', '4', '5', '6'];
+  for (const nombre of areas) {
+    await prisma.area.upsert({
+      where: { nombre },
+      update: {},
+      create: { nombre },
+    });
+  }
+
+  // Crear categorías predeterminadas
+  const categorias = ['EPP', 'Equipos', 'Herramientas'];
+  for (const nombre of categorias) {
+    await prisma.categoria.upsert({
+      where: { nombre },
+      update: {},
+      create: { nombre },
+    });
+  }
+
   // Crear usuario admin por defecto
   const adminData = {
     username: 'admin',
@@ -34,8 +54,6 @@ async function main() {
       isAuthenticated: false,
     },
   });
-
-  console.log('Seed data created successfully!');
 }
 
 main()
