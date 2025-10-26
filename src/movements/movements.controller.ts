@@ -18,8 +18,12 @@ import {
 import { MovementsService } from './movements.service';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { CreateExitDto } from './dto/create-exit.dto';
+import { UpdateEntryDto } from './dto/update-entry.dto';
 import { UpdateExitQuantityDto } from './dto/update-exit-quantity.dto';
-import { MovementEntryResponseDto, MovementExitResponseDto } from './dto/movement-response.dto';
+import {
+  MovementEntryResponseDto,
+  MovementExitResponseDto,
+} from './dto/movement-response.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermissions } from '../common/decorators/permissions.decorator';
@@ -44,7 +48,9 @@ export class MovementsController {
     status: 404,
     description: 'Product not found',
   })
-  createEntry(@Body() createEntryDto: CreateEntryDto): Promise<MovementEntryResponseDto> {
+  createEntry(
+    @Body() createEntryDto: CreateEntryDto,
+  ): Promise<MovementEntryResponseDto> {
     return this.movementsService.createEntry(createEntryDto);
   }
 
@@ -64,7 +70,9 @@ export class MovementsController {
     status: 404,
     description: 'Product not found',
   })
-  createExit(@Body() createExitDto: CreateExitDto): Promise<MovementExitResponseDto> {
+  createExit(
+    @Body() createExitDto: CreateExitDto,
+  ): Promise<MovementExitResponseDto> {
     return this.movementsService.createExit(createExitDto);
   }
 
@@ -77,7 +85,9 @@ export class MovementsController {
     description: 'Entries retrieved successfully',
     type: [MovementEntryResponseDto],
   })
-  findAllEntries(@Query('q') search?: string): Promise<MovementEntryResponseDto[]> {
+  findAllEntries(
+    @Query('q') search?: string,
+  ): Promise<MovementEntryResponseDto[]> {
     return this.movementsService.findAllEntries(search);
   }
 
@@ -90,7 +100,9 @@ export class MovementsController {
     description: 'Exits retrieved successfully',
     type: [MovementExitResponseDto],
   })
-  findAllExits(@Query('q') search?: string): Promise<MovementExitResponseDto[]> {
+  findAllExits(
+    @Query('q') search?: string,
+  ): Promise<MovementExitResponseDto[]> {
     return this.movementsService.findAllExits(search);
   }
 
@@ -107,6 +119,29 @@ export class MovementsController {
     exits: MovementExitResponseDto[];
   }> {
     return this.movementsService.searchMovements(query);
+  }
+
+  @Patch('entries/:id')
+  @RequirePermissions(Permission.MOVEMENTS_UPDATE)
+  @ApiOperation({ summary: 'Update entry movement' })
+  @ApiResponse({
+    status: 200,
+    description: 'Entry updated successfully',
+    type: MovementEntryResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid data or insufficient stock for quantity reduction',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Entry movement not found',
+  })
+  updateEntry(
+    @Param('id') id: string,
+    @Body() updateEntryDto: UpdateEntryDto,
+  ): Promise<MovementEntryResponseDto> {
+    return this.movementsService.updateEntry(+id, updateEntryDto);
   }
 
   @Patch('exits/:id/quantity')
