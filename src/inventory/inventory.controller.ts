@@ -66,12 +66,17 @@ export class InventoryController {
   @Get('areas')
   @RequirePermissions(Permission.INVENTORY_READ)
   @ApiOperation({ summary: 'Get all available areas' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search query for filtering areas',
+  })
   @ApiResponse({
     status: 200,
     description: 'Areas retrieved successfully',
   })
-  getAreas(): Promise<{ nombre: string }[]> {
-    return this.inventoryService.getAreas();
+  getAreas(@Query('search') search?: string): Promise<{ nombre: string }[]> {
+    return this.inventoryService.getAreas(search);
   }
 
   @Post('areas')
@@ -92,12 +97,19 @@ export class InventoryController {
   @Get('categorias')
   @RequirePermissions(Permission.INVENTORY_READ)
   @ApiOperation({ summary: 'Get all available categories' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search query for filtering categories',
+  })
   @ApiResponse({
     status: 200,
     description: 'Categories retrieved successfully',
   })
-  getCategorias(): Promise<{ nombre: string }[]> {
-    return this.inventoryService.getCategorias();
+  getCategorias(
+    @Query('search') search?: string,
+  ): Promise<{ nombre: string }[]> {
+    return this.inventoryService.getCategorias(search);
   }
 
   @Post('categorias')

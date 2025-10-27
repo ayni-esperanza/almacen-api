@@ -170,8 +170,13 @@ export class InventoryService {
     return { message: 'Product deleted successfully' };
   }
 
-  async getAreas(): Promise<{ nombre: string }[]> {
+  async getAreas(search?: string): Promise<{ nombre: string }[]> {
+    const where = search
+      ? { nombre: { contains: search, mode: 'insensitive' as const } }
+      : {};
+
     return this.prisma.area.findMany({
+      where,
       select: { nombre: true },
       orderBy: { nombre: 'asc' },
     });
@@ -184,8 +189,13 @@ export class InventoryService {
     });
   }
 
-  async getCategorias(): Promise<{ nombre: string }[]> {
+  async getCategorias(search?: string): Promise<{ nombre: string }[]> {
+    const where = search
+      ? { nombre: { contains: search, mode: 'insensitive' as const } }
+      : {};
+
     return this.prisma.categoria.findMany({
+      where,
       select: { nombre: true },
       orderBy: { nombre: 'asc' },
     });
