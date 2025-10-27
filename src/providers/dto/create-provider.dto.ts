@@ -4,6 +4,7 @@ import {
   IsArray,
   IsOptional,
   IsNotEmpty,
+  Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -20,7 +21,10 @@ export class CreateProviderDto {
     example: 'contacto@ferreteria.com',
     description: 'Provider email',
   })
-  @IsEmail()
+  @IsEmail({}, { message: 'Email must be a valid email address' })
+  @Matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
+    message: 'Email must have a valid domain (e.g., user@domain.com)',
+  })
   @IsNotEmpty()
   email: string;
 

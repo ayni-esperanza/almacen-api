@@ -5,6 +5,7 @@ import {
   IsEnum,
   IsNotEmpty,
   MinLength,
+  Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '../../common/enums/permissions.enum';
@@ -28,7 +29,10 @@ export class CreateUserDto {
     example: 'juan.perez@example.com',
     description: 'User email',
   })
-  @IsEmail()
+  @IsEmail({}, { message: 'Email must be a valid email address' })
+  @Matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
+    message: 'Email must have a valid domain (e.g., user@domain.com)',
+  })
   @IsOptional()
   email?: string;
 
