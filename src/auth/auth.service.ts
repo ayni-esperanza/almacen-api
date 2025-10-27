@@ -266,10 +266,12 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    await this.prisma.user.delete({
+    // Soft delete: set isActive to false instead of physically deleting
+    await this.prisma.user.update({
       where: { id },
+      data: { isActive: false },
     });
 
-    return { message: 'User deleted successfully' };
+    return { message: 'User deactivated successfully' };
   }
 }
