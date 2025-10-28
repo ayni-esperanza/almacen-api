@@ -153,6 +153,30 @@ export class InventoryService {
       },
     });
 
+    // If nombre is being updated, update descripcion in all related movements and equipment reports
+    if (
+      updateProductDto.nombre &&
+      updateProductDto.nombre !== existingProduct.nombre
+    ) {
+      // Update movement entries
+      await this.prisma.movementEntry.updateMany({
+        where: { codigoProducto: existingProduct.codigo },
+        data: { descripcion: updateProductDto.nombre },
+      });
+
+      // Update movement exits
+      await this.prisma.movementExit.updateMany({
+        where: { codigoProducto: existingProduct.codigo },
+        data: { descripcion: updateProductDto.nombre },
+      });
+
+      // Update equipment reports
+      await this.prisma.equipmentReport.updateMany({
+        where: { serieCodigo: existingProduct.codigo },
+        data: { equipo: updateProductDto.nombre },
+      });
+    }
+
     return {
       ...product,
       categoria: product.categoria || undefined,
