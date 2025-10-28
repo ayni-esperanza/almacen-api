@@ -34,11 +34,27 @@ export class ReportsController {
 
   @Get('exits')
   @ApiOperation({ summary: 'Get exits report data' })
-  @ApiQuery({ name: 'startDate', required: false, description: 'Start date in DD/MM/YYYY format' })
-  @ApiQuery({ name: 'endDate', required: false, description: 'End date in DD/MM/YYYY format' })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: 'Start date in DD/MM/YYYY format',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: 'End date in DD/MM/YYYY format',
+  })
   @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
-  @ApiQuery({ name: 'responsable', required: false, description: 'Filter by responsible person' })
-  @ApiQuery({ name: 'proyecto', required: false, description: 'Filter by project' })
+  @ApiQuery({
+    name: 'responsable',
+    required: false,
+    description: 'Filter by responsible person',
+  })
+  @ApiQuery({
+    name: 'proyecto',
+    required: false,
+    description: 'Filter by project',
+  })
   @ApiResponse({
     status: 200,
     description: 'Exits report data retrieved successfully',
@@ -51,15 +67,33 @@ export class ReportsController {
     @Query('responsable') responsable?: string,
     @Query('proyecto') proyecto?: string,
   ): Promise<ExitReportResponseDto> {
-    return this.reportsService.getExitsReport(startDate, endDate, area, responsable, proyecto);
+    return this.reportsService.getExitsReport(
+      startDate,
+      endDate,
+      area,
+      responsable,
+      proyecto,
+    );
   }
 
   @Get('entries')
   @ApiOperation({ summary: 'Get entries report data' })
-  @ApiQuery({ name: 'startDate', required: false, description: 'Start date in DD/MM/YYYY format' })
-  @ApiQuery({ name: 'endDate', required: false, description: 'End date in DD/MM/YYYY format' })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: 'Start date in DD/MM/YYYY format',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: 'End date in DD/MM/YYYY format',
+  })
   @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
-  @ApiQuery({ name: 'responsable', required: false, description: 'Filter by responsible person' })
+  @ApiQuery({
+    name: 'responsable',
+    required: false,
+    description: 'Filter by responsible person',
+  })
   @ApiResponse({
     status: 200,
     description: 'Entries report data retrieved successfully',
@@ -70,15 +104,32 @@ export class ReportsController {
     @Query('area') area?: string,
     @Query('responsable') responsable?: string,
   ): Promise<any> {
-    return this.reportsService.getEntriesReport(startDate, endDate, area, responsable);
+    return this.reportsService.getEntriesReport(
+      startDate,
+      endDate,
+      area,
+      responsable,
+    );
   }
 
   @Get('equipment')
   @ApiOperation({ summary: 'Get equipment report data' })
-  @ApiQuery({ name: 'startDate', required: false, description: 'Start date in DD/MM/YYYY format' })
-  @ApiQuery({ name: 'endDate', required: false, description: 'End date in DD/MM/YYYY format' })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: 'Start date in DD/MM/YYYY format',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: 'End date in DD/MM/YYYY format',
+  })
   @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
-  @ApiQuery({ name: 'responsable', required: false, description: 'Filter by responsible person' })
+  @ApiQuery({
+    name: 'responsable',
+    required: false,
+    description: 'Filter by responsible person',
+  })
   @ApiResponse({
     status: 200,
     description: 'Equipment report data retrieved successfully',
@@ -89,7 +140,12 @@ export class ReportsController {
     @Query('area') area?: string,
     @Query('responsable') responsable?: string,
   ): Promise<any> {
-    return this.reportsService.getEquipmentReport(startDate, endDate, area, responsable);
+    return this.reportsService.getEquipmentReport(
+      startDate,
+      endDate,
+      area,
+      responsable,
+    );
   }
 
   @Get('inventory')
@@ -117,10 +173,26 @@ export class ReportsController {
 
   @Get('stock-alerts')
   @ApiOperation({ summary: 'Get stock alerts' })
-  @ApiQuery({ name: 'categoria', required: false, description: 'Filter by category' })
-  @ApiQuery({ name: 'ubicacion', required: false, description: 'Filter by location' })
-  @ApiQuery({ name: 'estado', required: false, description: 'Filter by status' })
-  @ApiQuery({ name: 'soloCriticos', required: false, description: 'Show only critical alerts' })
+  @ApiQuery({
+    name: 'categoria',
+    required: false,
+    description: 'Filter by category',
+  })
+  @ApiQuery({
+    name: 'ubicacion',
+    required: false,
+    description: 'Filter by location',
+  })
+  @ApiQuery({
+    name: 'estado',
+    required: false,
+    description: 'Filter by status',
+  })
+  @ApiQuery({
+    name: 'soloCriticos',
+    required: false,
+    description: 'Show only critical alerts',
+  })
   @ApiResponse({
     status: 200,
     description: 'Stock alerts retrieved successfully',
@@ -164,6 +236,26 @@ export class ReportsController {
     return this.reportsService.getStockAlertStatistics();
   }
 
+  @Get('stock-alerts/filters/categories')
+  @ApiOperation({ summary: 'Get all available categories for stock alerts' })
+  @ApiResponse({
+    status: 200,
+    description: 'Categories retrieved successfully',
+  })
+  getStockAlertCategories(): Promise<string[]> {
+    return this.reportsService.getStockAlertCategories();
+  }
+
+  @Get('stock-alerts/filters/locations')
+  @ApiOperation({ summary: 'Get all available locations for stock alerts' })
+  @ApiResponse({
+    status: 200,
+    description: 'Locations retrieved successfully',
+  })
+  getStockAlertLocations(): Promise<string[]> {
+    return this.reportsService.getStockAlertLocations();
+  }
+
   // === EXPENSE REPORTS ENDPOINTS ===
 
   @Get('expenses')
@@ -171,8 +263,16 @@ export class ReportsController {
   @ApiQuery({ name: 'fechaInicio', required: false, description: 'Start date' })
   @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
   @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
-  @ApiQuery({ name: 'proyecto', required: false, description: 'Filter by project' })
-  @ApiQuery({ name: 'tipoReporte', required: false, description: 'Report type' })
+  @ApiQuery({
+    name: 'proyecto',
+    required: false,
+    description: 'Filter by project',
+  })
+  @ApiQuery({
+    name: 'tipoReporte',
+    required: false,
+    description: 'Report type',
+  })
   @ApiResponse({
     status: 200,
     description: 'Expense reports retrieved successfully',
@@ -199,8 +299,16 @@ export class ReportsController {
   @ApiQuery({ name: 'fechaInicio', required: false, description: 'Start date' })
   @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
   @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
-  @ApiQuery({ name: 'proyecto', required: false, description: 'Filter by project' })
-  @ApiQuery({ name: 'tipoReporte', required: false, description: 'Report type' })
+  @ApiQuery({
+    name: 'proyecto',
+    required: false,
+    description: 'Filter by project',
+  })
+  @ApiQuery({
+    name: 'tipoReporte',
+    required: false,
+    description: 'Report type',
+  })
   @ApiResponse({
     status: 200,
     description: 'Monthly expense data retrieved successfully',
@@ -227,8 +335,16 @@ export class ReportsController {
   @ApiQuery({ name: 'fechaInicio', required: false, description: 'Start date' })
   @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
   @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
-  @ApiQuery({ name: 'proyecto', required: false, description: 'Filter by project' })
-  @ApiQuery({ name: 'tipoReporte', required: false, description: 'Report type' })
+  @ApiQuery({
+    name: 'proyecto',
+    required: false,
+    description: 'Filter by project',
+  })
+  @ApiQuery({
+    name: 'tipoReporte',
+    required: false,
+    description: 'Report type',
+  })
   @ApiResponse({
     status: 200,
     description: 'Area expense data retrieved successfully',
@@ -255,10 +371,26 @@ export class ReportsController {
   @Get('stock-alerts/export')
   @RequirePermissions(Permission.REPORTS_GENERATE)
   @ApiOperation({ summary: 'Export stock alerts to PDF' })
-  @ApiQuery({ name: 'categoria', required: false, description: 'Filter by category' })
-  @ApiQuery({ name: 'ubicacion', required: false, description: 'Filter by location' })
-  @ApiQuery({ name: 'estado', required: false, description: 'Filter by status' })
-  @ApiQuery({ name: 'soloCriticos', required: false, description: 'Show only critical alerts' })
+  @ApiQuery({
+    name: 'categoria',
+    required: false,
+    description: 'Filter by category',
+  })
+  @ApiQuery({
+    name: 'ubicacion',
+    required: false,
+    description: 'Filter by location',
+  })
+  @ApiQuery({
+    name: 'estado',
+    required: false,
+    description: 'Filter by status',
+  })
+  @ApiQuery({
+    name: 'soloCriticos',
+    required: false,
+    description: 'Show only critical alerts',
+  })
   @ApiResponse({
     status: 200,
     description: 'PDF file generated successfully',
@@ -276,15 +408,15 @@ export class ReportsController {
       estado,
       mostrarSoloCriticos: soloCriticos === 'true',
     };
-    
+
     const pdfBuffer = await this.reportsService.exportStockAlertsPDF(filters);
-    
+
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="alertas-stock-${new Date().toISOString().split('T')[0]}.pdf"`,
       'Content-Length': pdfBuffer.length,
     });
-    
+
     res.send(pdfBuffer);
   }
 
@@ -294,8 +426,16 @@ export class ReportsController {
   @ApiQuery({ name: 'fechaInicio', required: false, description: 'Start date' })
   @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
   @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
-  @ApiQuery({ name: 'proyecto', required: false, description: 'Filter by project' })
-  @ApiQuery({ name: 'tipoReporte', required: false, description: 'Report type' })
+  @ApiQuery({
+    name: 'proyecto',
+    required: false,
+    description: 'Filter by project',
+  })
+  @ApiQuery({
+    name: 'tipoReporte',
+    required: false,
+    description: 'Report type',
+  })
   @ApiResponse({
     status: 200,
     description: 'PDF file generated successfully',
@@ -315,15 +455,15 @@ export class ReportsController {
       proyecto,
       tipoReporte,
     };
-    
+
     const pdfBuffer = await this.reportsService.exportExpenseReportPDF(filters);
-    
+
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="reporte-gastos-${new Date().toISOString().split('T')[0]}.pdf"`,
       'Content-Length': pdfBuffer.length,
     });
-    
+
     res.send(pdfBuffer);
   }
 }

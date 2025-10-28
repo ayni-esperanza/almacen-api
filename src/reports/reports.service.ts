@@ -454,6 +454,32 @@ export class ReportsService {
     };
   }
 
+  async getStockAlertCategories(): Promise<string[]> {
+    const products = await this.prisma.product.findMany({
+      select: { categoria: true },
+      distinct: ['categoria'],
+      where: {
+        categoria: {
+          not: null,
+        },
+      },
+    });
+
+    return products
+      .map((p) => p.categoria)
+      .filter((c): c is string => c !== null)
+      .sort();
+  }
+
+  async getStockAlertLocations(): Promise<string[]> {
+    const products = await this.prisma.product.findMany({
+      select: { ubicacion: true },
+      distinct: ['ubicacion'],
+    });
+
+    return products.map((p) => p.ubicacion).sort();
+  }
+
   // === EXPENSE REPORTS METHODS ===
 
   async getExpenseReports(filters: any): Promise<any[]> {
