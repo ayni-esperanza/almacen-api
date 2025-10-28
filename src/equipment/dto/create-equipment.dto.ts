@@ -1,5 +1,12 @@
-import { IsString, IsNumber, IsEnum, IsNotEmpty, Min } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsNotEmpty,
+  Min,
+  IsOptional,
+} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum EstadoEquipo {
   Bueno = 'Bueno',
@@ -51,8 +58,45 @@ export class CreateEquipmentDto {
   @IsNotEmpty()
   horaSalida: string;
 
-  @ApiProperty({ example: 'MECANICA', description: 'Area or project' })
+  @ApiProperty({
+    description: 'Área o proyecto al que se asigna el equipo',
+    example: 'Proyecto Alpha',
+  })
   @IsString()
   @IsNotEmpty()
   areaProyecto: string;
+
+  // Campos opcionales de retorno
+  @ApiPropertyOptional({
+    description: 'Fecha de retorno del equipo',
+    example: '2024-01-20',
+  })
+  @IsOptional()
+  @IsString()
+  fechaRetorno?: string;
+
+  @ApiPropertyOptional({
+    description: 'Hora de retorno del equipo',
+    example: '14:30',
+  })
+  @IsOptional()
+  @IsString()
+  horaRetorno?: string;
+
+  @ApiPropertyOptional({
+    enum: EstadoEquipo,
+    example: EstadoEquipo.Bueno,
+    description: 'Estado del equipo al momento del retorno',
+  })
+  @IsOptional()
+  @IsEnum(EstadoEquipo)
+  estadoRetorno?: EstadoEquipo;
+
+  @ApiPropertyOptional({
+    description: 'Responsable del retorno del equipo',
+    example: 'Juan Pérez',
+  })
+  @IsOptional()
+  @IsString()
+  responsableRetorno?: string;
 }

@@ -33,6 +33,10 @@ export class EquipmentService {
         ...createEquipmentDto,
         // Map enum values to match Prisma enum
         estadoEquipo: this.mapEstadoEquipo(createEquipmentDto.estadoEquipo),
+        // Map estadoRetorno if present
+        ...(createEquipmentDto.estadoRetorno && {
+          estadoRetorno: this.mapEstadoEquipo(createEquipmentDto.estadoRetorno),
+        }),
       },
     });
 
@@ -162,6 +166,7 @@ export class EquipmentService {
       estadoRetorno: equipment.estadoRetorno
         ? this.mapEstadoEquipoToFrontend(equipment.estadoRetorno)
         : undefined,
+      responsableRetorno: equipment.responsableRetorno || undefined,
       firmaRetorno: equipment.firmaRetorno || undefined,
       createdAt: equipment.createdAt,
       updatedAt: equipment.updatedAt,

@@ -13,10 +13,10 @@ export class EquipmentResponseDto {
   @ApiProperty({ example: 1, description: 'Equipment quantity' })
   cantidad: number;
 
-  @ApiProperty({ 
-    example: 'Bueno', 
+  @ApiProperty({
+    example: 'Bueno',
     description: 'Equipment condition',
-    enum: ['Bueno', 'Regular', 'Malo', 'En Reparación', 'Dañado']
+    enum: ['Bueno', 'Regular', 'Malo', 'En Reparación', 'Dañado'],
   })
   estadoEquipo: string;
 
@@ -32,7 +32,10 @@ export class EquipmentResponseDto {
   @ApiProperty({ example: 'MECANICA', description: 'Area or project' })
   areaProyecto: string;
 
-  @ApiProperty({ example: 'J.Pérez', description: 'Responsible person signature' })
+  @ApiProperty({
+    example: 'J.Pérez',
+    description: 'Responsible person signature',
+  })
   firma: string;
 
   @ApiPropertyOptional({ example: '25/08/2025', description: 'Return date' })
@@ -41,12 +44,18 @@ export class EquipmentResponseDto {
   @ApiPropertyOptional({ example: '16:45', description: 'Return time' })
   horaRetorno?: string;
 
-  @ApiPropertyOptional({ 
-    example: 'Bueno', 
+  @ApiPropertyOptional({
+    example: 'Bueno',
     description: 'Equipment condition upon return',
-    enum: ['Bueno', 'Regular', 'Malo', 'En Reparación', 'Dañado']
+    enum: ['Bueno', 'Regular', 'Malo', 'En Reparación', 'Dañado'],
   })
   estadoRetorno?: string;
+
+  @ApiPropertyOptional({
+    example: 'Juan Pérez',
+    description: 'Person responsible for return',
+  })
+  responsableRetorno?: string;
 
   @ApiPropertyOptional({ example: 'J.Pérez', description: 'Return signature' })
   firmaRetorno?: string;
