@@ -9,19 +9,32 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ProvidersService } from './providers.service';
 import { CreateProviderDto } from './dto/create-provider.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { ProviderResponseDto } from './dto/provider-response.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/decorators/permissions.decorator';
+import { Permission } from '../common/enums/permissions.enum';
 
 @ApiTags('Providers')
+@ApiBearerAuth()
 @Controller('providers')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ProvidersController {
   constructor(private readonly providersService: ProvidersService) {}
 
   @Post()
+  @RequirePermissions(Permission.PROVIDERS_CREATE)
   @ApiOperation({ summary: 'Create a new provider' })
   @ApiResponse({
     status: 201,
@@ -36,6 +49,7 @@ export class ProvidersController {
   }
 
   @Get()
+  @RequirePermissions(Permission.PROVIDERS_READ)
   @ApiOperation({ summary: 'Get all providers' })
   @ApiResponse({
     status: 200,
@@ -47,6 +61,7 @@ export class ProvidersController {
   }
 
   @Get(':id')
+  @RequirePermissions(Permission.PROVIDERS_READ)
   @ApiOperation({ summary: 'Get provider by ID' })
   @ApiResponse({
     status: 200,
@@ -59,6 +74,7 @@ export class ProvidersController {
   }
 
   @Patch(':id')
+  @RequirePermissions(Permission.PROVIDERS_UPDATE)
   @ApiOperation({ summary: 'Update provider' })
   @ApiResponse({
     status: 200,
@@ -75,6 +91,7 @@ export class ProvidersController {
   }
 
   @Delete(':id')
+  @RequirePermissions(Permission.PROVIDERS_DELETE)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete provider' })
   @ApiResponse({ status: 200, description: 'Provider deleted successfully' })

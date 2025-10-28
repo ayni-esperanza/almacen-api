@@ -12,10 +12,9 @@ datasource db {
 
 // === AUTH MODELS ===
 enum UserRole {
-  JEFE
-  ASISTENTE
   GERENTE
   AYUDANTE
+  ASISTENTE
 }
 
 model User {

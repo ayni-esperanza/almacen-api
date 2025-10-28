@@ -26,6 +26,12 @@ export enum Permission {
   USERS_CREATE = 'users:create',
   USERS_UPDATE = 'users:update',
   USERS_DELETE = 'users:delete',
+
+  // Provider permissions
+  PROVIDERS_READ = 'providers:read',
+  PROVIDERS_CREATE = 'providers:create',
+  PROVIDERS_UPDATE = 'providers:update',
+  PROVIDERS_DELETE = 'providers:delete',
 }
 
 import { UserRole } from '@prisma/client';
@@ -34,7 +40,8 @@ export { UserRole };
 
 // Role permissions mapping
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  [UserRole.JEFE]: [
+  // GERENTE: Puede ver todas las secciones (acceso completo)
+  [UserRole.GERENTE]: [
     // Full access to everything
     Permission.INVENTORY_READ,
     Permission.INVENTORY_CREATE,
@@ -54,58 +61,50 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.USERS_CREATE,
     Permission.USERS_UPDATE,
     Permission.USERS_DELETE,
+    Permission.PROVIDERS_READ,
+    Permission.PROVIDERS_CREATE,
+    Permission.PROVIDERS_UPDATE,
+    Permission.PROVIDERS_DELETE,
   ],
-  [UserRole.ASISTENTE]: [
-    // Full access to everything (same as JEFE)
-    Permission.INVENTORY_READ,
-    Permission.INVENTORY_CREATE,
-    Permission.INVENTORY_UPDATE,
-    Permission.INVENTORY_DELETE,
-    Permission.MOVEMENTS_READ,
-    Permission.MOVEMENTS_CREATE,
-    Permission.MOVEMENTS_UPDATE,
-    Permission.MOVEMENTS_DELETE,
-    Permission.EQUIPMENT_READ,
-    Permission.EQUIPMENT_CREATE,
-    Permission.EQUIPMENT_UPDATE,
-    Permission.EQUIPMENT_DELETE,
-    Permission.REPORTS_READ,
-    Permission.REPORTS_GENERATE,
-    Permission.USERS_READ,
-    Permission.USERS_CREATE,
-    Permission.USERS_UPDATE,
-    Permission.USERS_DELETE,
-  ],
-  [UserRole.GERENTE]: [
-    // Full access to everything (same as JEFE)
-    Permission.INVENTORY_READ,
-    Permission.INVENTORY_CREATE,
-    Permission.INVENTORY_UPDATE,
-    Permission.INVENTORY_DELETE,
-    Permission.MOVEMENTS_READ,
-    Permission.MOVEMENTS_CREATE,
-    Permission.MOVEMENTS_UPDATE,
-    Permission.MOVEMENTS_DELETE,
-    Permission.EQUIPMENT_READ,
-    Permission.EQUIPMENT_CREATE,
-    Permission.EQUIPMENT_UPDATE,
-    Permission.EQUIPMENT_DELETE,
-    Permission.REPORTS_READ,
-    Permission.REPORTS_GENERATE,
-    Permission.USERS_READ,
-    Permission.USERS_CREATE,
-    Permission.USERS_UPDATE,
-    Permission.USERS_DELETE,
-  ],
+
+  // AYUDANTE: Stock, Movimientos, Equipo y Reportes (NO Usuarios, NO Proveedores)
   [UserRole.AYUDANTE]: [
-    // Limited access: can create/read/update movements but not delete, no reports
+    // Full access to allowed sections
     Permission.INVENTORY_READ,
+    Permission.INVENTORY_CREATE,
+    Permission.INVENTORY_UPDATE,
+    Permission.INVENTORY_DELETE,
     Permission.MOVEMENTS_READ,
     Permission.MOVEMENTS_CREATE,
     Permission.MOVEMENTS_UPDATE,
-    // No MOVEMENTS_DELETE
+    Permission.MOVEMENTS_DELETE,
     Permission.EQUIPMENT_READ,
+    Permission.EQUIPMENT_CREATE,
+    Permission.EQUIPMENT_UPDATE,
+    Permission.EQUIPMENT_DELETE,
+    Permission.REPORTS_READ,
+    Permission.REPORTS_GENERATE,
+    // No USERS permissions
+    // No PROVIDERS permissions
+  ],
+
+  // ASISTENTE: Stock, Movimientos, Equipo (NO Reportes, NO Usuarios, NO Proveedores)
+  [UserRole.ASISTENTE]: [
+    // Full access to allowed sections only
+    Permission.INVENTORY_READ,
+    Permission.INVENTORY_CREATE,
+    Permission.INVENTORY_UPDATE,
+    Permission.INVENTORY_DELETE,
+    Permission.MOVEMENTS_READ,
+    Permission.MOVEMENTS_CREATE,
+    Permission.MOVEMENTS_UPDATE,
+    Permission.MOVEMENTS_DELETE,
+    Permission.EQUIPMENT_READ,
+    Permission.EQUIPMENT_CREATE,
+    Permission.EQUIPMENT_UPDATE,
+    Permission.EQUIPMENT_DELETE,
     // No REPORTS permissions
     // No USERS permissions
+    // No PROVIDERS permissions
   ],
 };

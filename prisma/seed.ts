@@ -33,7 +33,7 @@ async function main() {
     lastName: 'Sistema',
     phoneNumber: '+51 999888777',
     avatarUrl: 'https://ui-avatars.com/api/?name=Admin+Sistema',
-    role: UserRole.JEFE,
+    role: UserRole.GERENTE,
   };
 
   const hashedPassword = await bcrypt.hash(adminData.password, 10);

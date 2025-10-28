@@ -13,7 +13,7 @@ export class AuthResponseDto {
 
   @ApiProperty({
     enum: UserRole,
-    example: UserRole.JEFE,
+    example: UserRole.GERENTE,
     description: 'User role',
   })
   role: UserRole;
@@ -71,7 +71,7 @@ export class UserDto {
 
   @ApiProperty({
     enum: UserRole,
-    example: UserRole.JEFE,
+    example: UserRole.GERENTE,
     description: 'User role',
   })
   role: UserRole;
