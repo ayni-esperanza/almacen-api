@@ -342,7 +342,7 @@ export class ReportsService {
 
     // Convertir a alertas de stock
     const alerts: StockAlert[] = products.map((product) => {
-      const stockMinimo = 10; // Stock mínimo por defecto
+      const stockMinimo = product.stockMinimo || 10; // Usar el stock mínimo del producto o 10 por defecto
       let estado: 'critico' | 'bajo' | 'normal' = 'normal';
 
       if (product.stockActual === 0) {
@@ -393,7 +393,7 @@ export class ReportsService {
       return null;
     }
 
-    const stockMinimo = 10;
+    const stockMinimo = product.stockMinimo || 10; // Usar el stock mínimo del producto o 10 por defecto
     let estado: 'critico' | 'bajo' | 'normal' = 'normal';
 
     if (product.stockActual === 0) {
@@ -420,7 +420,6 @@ export class ReportsService {
     const products = await this.prisma.product.findMany({
       include: { provider: true },
     });
-    const stockMinimo = 10;
 
     let total = 0;
     let criticos = 0;
@@ -429,6 +428,7 @@ export class ReportsService {
     let stockMinimoTotal = 0;
 
     products.forEach((product) => {
+      const stockMinimo = product.stockMinimo || 10; // Usar el stock mínimo del producto o 10 por defecto
       totalStock += product.stockActual;
       stockMinimoTotal += stockMinimo;
 
