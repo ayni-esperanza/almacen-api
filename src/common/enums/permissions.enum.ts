@@ -67,7 +67,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.PROVIDERS_DELETE,
   ],
 
-  // AYUDANTE: Stock, Movimientos, Equipo y Reportes (NO Usuarios, NO Proveedores)
+  // AYUDANTE: Stock, Movimientos, Equipo, Reportes y Proveedores (NO Usuarios)
   [UserRole.AYUDANTE]: [
     // Full access to allowed sections
     Permission.INVENTORY_READ,
@@ -84,11 +84,14 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.EQUIPMENT_DELETE,
     Permission.REPORTS_READ,
     Permission.REPORTS_GENERATE,
+    Permission.PROVIDERS_READ,
+    Permission.PROVIDERS_CREATE,
+    Permission.PROVIDERS_UPDATE,
+    Permission.PROVIDERS_DELETE,
     // No USERS permissions
-    // No PROVIDERS permissions
   ],
 
-  // ASISTENTE: Stock, Movimientos, Equipo (NO Reportes, NO Usuarios, NO Proveedores)
+  // ASISTENTE: Stock, Movimientos, Equipo y Reportes (NO Usuarios, NO Proveedores)
   [UserRole.ASISTENTE]: [
     // Full access to allowed sections only
     Permission.INVENTORY_READ,
@@ -103,7 +106,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.EQUIPMENT_CREATE,
     Permission.EQUIPMENT_UPDATE,
     Permission.EQUIPMENT_DELETE,
-    // No REPORTS permissions
+    Permission.REPORTS_READ,
+    Permission.REPORTS_GENERATE,
     // No USERS permissions
     // No PROVIDERS permissions
   ],
