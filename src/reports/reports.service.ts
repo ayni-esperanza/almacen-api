@@ -7,7 +7,10 @@ import {
 } from './dto/report-response.dto';
 import { GenerateReportDto, ReportType } from './dto/generate-report.dto';
 import { PdfExportService } from '../common/services/pdf-export.service';
-import { StockDashboardDto } from './dto/stock-dashboard.dto';
+import {
+  StockDashboardDto,
+  CriticalProductDto,
+} from './dto/stock-dashboard.dto';
 
 // Interfaces para alertas de stock
 interface StockAlert {
@@ -637,10 +640,13 @@ export class ReportsService {
     // Calcular valor total del inventario (suma de costoUnitario * stockActual)
     const valorTotalInventario = await this.calculateTotalInventoryValue();
 
+    // Obtener producto crítico (menor stock > 0, considerando porcentaje de stock mínimo)
+    const productoCritico = await this.findCriticalProduct();
+
     return {
       totalProductos,
       valorTotalInventario,
-      productoCritico: undefined,
+      productoCritico,
       productoMenosMovido: undefined,
       productoMasMovido: undefined,
       periodoAnalisisDias,
@@ -679,5 +685,83 @@ export class ReportsService {
 
     // Redondear a 2 decimales
     return Math.round(totalValue * 100) / 100;
+  }
+
+  /**
+   * Encuentra el producto crítico (menor stock > 0, considerando porcentaje de stock mínimo en empates)
+   * @returns Producto con menor stock disponible o undefined si no hay productos
+   */
+  private async findCriticalProduct(): Promise<CriticalProductDto | undefined> {
+    // Obtener productos con stock > 0
+    const products = await this.prisma.product.findMany({
+      where: {
+        stockActual: {
+          gt: 0,
+        },
+      },
+      select: {
+        codigo: true,
+        nombre: true,
+        stockActual: true,
+        stockMinimo: true,
+        ubicacion: true,
+        categoria: true,
+      },
+    });
+
+    if (products.length === 0) {
+      return undefined;
+    }
+
+    // Encontrar el menor stock
+    const minStock = Math.min(...products.map((p) => p.stockActual));
+
+    // Filtrar productos con el menor stock
+    const productsWithMinStock = products.filter(
+      (p) => p.stockActual === minStock,
+    );
+
+    // Si solo hay uno con el menor stock, retornarlo
+    if (productsWithMinStock.length === 1) {
+      const product = productsWithMinStock[0];
+      return {
+        codigo: product.codigo,
+        nombre: product.nombre,
+        stockActual: product.stockActual,
+        stockMinimo: product.stockMinimo,
+        porcentajeStockMinimo:
+          product.stockMinimo > 0
+            ? Math.round((product.stockActual / product.stockMinimo) * 100)
+            : 0,
+        ubicacion: product.ubicacion,
+        categoria: product.categoria || undefined,
+      };
+    }
+
+    // Si hay empate, ordenar por menor porcentaje respecto al stock mínimo
+    const sortedByPercentage = productsWithMinStock.sort((a, b) => {
+      const percentageA =
+        a.stockMinimo > 0 ? (a.stockActual / a.stockMinimo) * 100 : 0;
+      const percentageB =
+        b.stockMinimo > 0 ? (b.stockActual / b.stockMinimo) * 100 : 0;
+      return percentageA - percentageB;
+    });
+
+    const criticalProduct = sortedByPercentage[0];
+
+    return {
+      codigo: criticalProduct.codigo,
+      nombre: criticalProduct.nombre,
+      stockActual: criticalProduct.stockActual,
+      stockMinimo: criticalProduct.stockMinimo,
+      porcentajeStockMinimo:
+        criticalProduct.stockMinimo > 0
+          ? Math.round(
+              (criticalProduct.stockActual / criticalProduct.stockMinimo) * 100,
+            )
+          : 0,
+      ubicacion: criticalProduct.ubicacion,
+      categoria: criticalProduct.categoria || undefined,
+    };
   }
 }
