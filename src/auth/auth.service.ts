@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../common/services/prisma.service';
@@ -195,7 +196,11 @@ export class AuthService {
     return user;
   }
 
-  async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<UserDto> {
+  async updateUser(
+    id: number,
+    updateUserDto: UpdateUserDto,
+    currentUserId?: number,
+  ): Promise<UserDto> {
     // Check if user exists
     const existingUser = await this.prisma.user.findUnique({
       where: { id },
@@ -203,6 +208,32 @@ export class AuthService {
 
     if (!existingUser) {
       throw new NotFoundException('User not found');
+    }
+
+    // Prevent user from deactivating themselves
+    if (
+      currentUserId &&
+      currentUserId === id &&
+      updateUserDto.isActive === false
+    ) {
+      throw new BadRequestException('No puedes desactivar tu propia cuenta');
+    }
+
+    // If trying to deactivate a GERENTE, check if it's not the last active one
+    if (updateUserDto.isActive === false && existingUser.role === 'GERENTE') {
+      const activeManagers = await this.prisma.user.count({
+        where: {
+          role: 'GERENTE',
+          isActive: true,
+          id: { not: id }, // Exclude the user being updated
+        },
+      });
+
+      if (activeManagers === 0) {
+        throw new BadRequestException(
+          'No se puede desactivar al último gerente activo',
+        );
+      }
     }
 
     // Check if username is being updated and doesn't conflict

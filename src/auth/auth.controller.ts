@@ -1,5 +1,22 @@
-import { Controller, Post, Get, Patch, Delete, Body, Param, UseGuards, HttpCode, HttpStatus, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  ParseIntPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,14 +37,14 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User login' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Login successful',
-    type: AuthResponseDto
+    type: AuthResponseDto,
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Invalid credentials'
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid credentials',
   })
   async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(loginDto);
@@ -38,9 +55,9 @@ export class AuthController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User logout' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Logout successful'
+  @ApiResponse({
+    status: 200,
+    description: 'Logout successful',
   })
   async logout(@User() user: AuthUser): Promise<{ message: string }> {
     return this.authService.logout(user.id);
@@ -50,10 +67,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'User profile retrieved successfully',
-    type: UserDto
+    type: UserDto,
   })
   async getProfile(@User() user: AuthUser): Promise<UserDto> {
     return this.authService.getProfile(user.id);
@@ -65,10 +82,10 @@ export class AuthController {
   @RequirePermissions(Permission.USERS_READ)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Users retrieved successfully',
-    type: [UserDto]
+    type: [UserDto],
   })
   async getAllUsers(): Promise<UserDto[]> {
     return this.authService.getAllUsers();
@@ -79,10 +96,10 @@ export class AuthController {
   @RequirePermissions(Permission.USERS_READ)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user by ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'User retrieved successfully',
-    type: UserDto
+    type: UserDto,
   })
   async getUserById(@Param('id', ParseIntPipe) id: number): Promise<UserDto> {
     return this.authService.getUserById(id);
@@ -94,10 +111,10 @@ export class AuthController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create new user' })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'User created successfully',
-    type: UserDto
+    type: UserDto,
   })
   async createUser(@Body() createUserDto: CreateUserDto): Promise<UserDto> {
     return this.authService.createUser(createUserDto);
@@ -108,16 +125,17 @@ export class AuthController {
   @RequirePermissions(Permission.USERS_UPDATE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'User updated successfully',
-    type: UserDto
+    type: UserDto,
   })
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto
+    @Body() updateUserDto: UpdateUserDto,
+    @User() currentUser: AuthUser,
   ): Promise<UserDto> {
-    return this.authService.updateUser(id, updateUserDto);
+    return this.authService.updateUser(id, updateUserDto, currentUser.id);
   }
 
   @Delete('users/:id')
@@ -125,11 +143,13 @@ export class AuthController {
   @RequirePermissions(Permission.USERS_DELETE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete user' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'User deleted successfully'
+  @ApiResponse({
+    status: 200,
+    description: 'User deleted successfully',
   })
-  async deleteUser(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
+  async deleteUser(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<{ message: string }> {
     return this.authService.deleteUser(id);
   }
 }
