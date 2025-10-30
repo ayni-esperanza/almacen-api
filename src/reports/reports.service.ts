@@ -631,14 +631,30 @@ export class ReportsService {
   async getStockDashboard(
     periodoAnalisisDias: number = 30,
   ): Promise<StockDashboardDto> {
-    // TODO: Implementar en las siguientes tareas
+    // Calcular total de productos en almacén (suma de stockActual)
+    const totalProductos = await this.calculateTotalProducts();
+
     return {
-      totalProductos: 0,
+      totalProductos,
       valorTotalInventario: 0,
       productoCritico: undefined,
       productoMenosMovido: undefined,
       productoMasMovido: undefined,
       periodoAnalisisDias,
     };
+  }
+
+  /**
+   * Calcula el total de unidades en stock (suma de stockActual de todos los productos)
+   * @returns Total de unidades en el almacén
+   */
+  private async calculateTotalProducts(): Promise<number> {
+    const result = await this.prisma.product.aggregate({
+      _sum: {
+        stockActual: true,
+      },
+    });
+
+    return result._sum.stockActual || 0;
   }
 }
