@@ -634,9 +634,12 @@ export class ReportsService {
     // Calcular total de productos en almacén (suma de stockActual)
     const totalProductos = await this.calculateTotalProducts();
 
+    // Calcular valor total del inventario (suma de costoUnitario * stockActual)
+    const valorTotalInventario = await this.calculateTotalInventoryValue();
+
     return {
       totalProductos,
-      valorTotalInventario: 0,
+      valorTotalInventario,
       productoCritico: undefined,
       productoMenosMovido: undefined,
       productoMasMovido: undefined,
@@ -656,5 +659,25 @@ export class ReportsService {
     });
 
     return result._sum.stockActual || 0;
+  }
+
+  /**
+   * Calcula el valor total del inventario (suma de costoUnitario * stockActual)
+   * @returns Valor monetario total del inventario
+   */
+  private async calculateTotalInventoryValue(): Promise<number> {
+    const products = await this.prisma.product.findMany({
+      select: {
+        costoUnitario: true,
+        stockActual: true,
+      },
+    });
+
+    const totalValue = products.reduce((sum, product) => {
+      return sum + product.costoUnitario * product.stockActual;
+    }, 0);
+
+    // Redondear a 2 decimales
+    return Math.round(totalValue * 100) / 100;
   }
 }
