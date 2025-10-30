@@ -7,6 +7,7 @@ import {
 } from './dto/report-response.dto';
 import { GenerateReportDto, ReportType } from './dto/generate-report.dto';
 import { PdfExportService } from '../common/services/pdf-export.service';
+import { StockDashboardDto } from './dto/stock-dashboard.dto';
 
 // Interfaces para alertas de stock
 interface StockAlert {
@@ -620,5 +621,24 @@ export class ReportsService {
     const data = await this.getExpenseReports(filters);
 
     return this.pdfExportService.generateExpenseReportPDF(data, filters);
+  }
+
+  /**
+   * Obtiene las métricas del dashboard de stock
+   * @param periodoAnalisisDias Período en días para calcular producto más movido (default: 30)
+   * @returns Datos completos del dashboard de stock
+   */
+  async getStockDashboard(
+    periodoAnalisisDias: number = 30,
+  ): Promise<StockDashboardDto> {
+    // TODO: Implementar en las siguientes tareas
+    return {
+      totalProductos: 0,
+      valorTotalInventario: 0,
+      productoCritico: undefined,
+      productoMenosMovido: undefined,
+      productoMasMovido: undefined,
+      periodoAnalisisDias,
+    };
   }
 }

@@ -19,6 +19,7 @@ import type { Response } from 'express';
 import { ReportsService } from './reports.service';
 import { ExitReportResponseDto } from './dto/report-response.dto';
 import { GenerateReportDto } from './dto/generate-report.dto';
+import { StockDashboardDto } from './dto/stock-dashboard.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermissions } from '../common/decorators/permissions.decorator';
@@ -31,6 +32,26 @@ import { Permission } from '../common/enums/permissions.enum';
 @ApiBearerAuth()
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
+
+  @Get('stock-dashboard')
+  @ApiOperation({ summary: 'Get stock dashboard metrics' })
+  @ApiQuery({
+    name: 'periodoAnalisisDias',
+    required: false,
+    description:
+      'Período en días para calcular el producto más movido (default: 30)',
+    type: Number,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Stock dashboard metrics retrieved successfully',
+    type: StockDashboardDto,
+  })
+  getStockDashboard(
+    @Query('periodoAnalisisDias') periodoAnalisisDias?: number,
+  ): Promise<StockDashboardDto> {
+    return this.reportsService.getStockDashboard(periodoAnalisisDias || 30);
+  }
 
   @Get('exits')
   @ApiOperation({ summary: 'Get exits report data' })
