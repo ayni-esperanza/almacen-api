@@ -11,6 +11,7 @@ import {
   StockDashboardDto,
   CriticalProductDto,
   LeastMovedProductDto,
+  MostMovedProductDto,
 } from './dto/stock-dashboard.dto';
 
 // Interfaces para alertas de stock
@@ -647,12 +648,16 @@ export class ReportsService {
     // Obtener producto menos movido (menor cantidad de movimientos de salida)
     const productoMenosMovido = await this.findLeastMovedProduct();
 
+    // Obtener producto más movido (mayor cantidad de movimientos en el período)
+    const productoMasMovido =
+      await this.findMostMovedProduct(periodoAnalisisDias);
+
     return {
       totalProductos,
       valorTotalInventario,
       productoCritico,
       productoMenosMovido,
-      productoMasMovido: undefined,
+      productoMasMovido,
       periodoAnalisisDias,
     };
   }
@@ -823,5 +828,87 @@ export class ReportsService {
       stockActual: leastMovedProduct.stockActual,
       ubicacion: leastMovedProduct.ubicacion,
     };
+  }
+
+  /**
+   * Encuentra el producto más movido (mayor cantidad de movimientos de salida en el período)
+   * @param periodoAnalisisDias Período en días para analizar movimientos (default: 30)
+   * @returns Producto con mayor cantidad de movimientos de salida o undefined si no hay productos
+   */
+  private async findMostMovedProduct(
+    periodoAnalisisDias: number = 30,
+  ): Promise<MostMovedProductDto | undefined> {
+    // Calcular la fecha de inicio del período (periodoAnalisisDias días atrás desde hoy)
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - periodoAnalisisDias);
+    const startDateString = this.formatDateToDDMMYYYY(startDate);
+
+    // Agrupar movimientos de salida por producto dentro del período
+    const exitsByProduct = await this.prisma.movementExit.groupBy({
+      by: ['codigoProducto'],
+      where: {
+        fecha: {
+          gte: startDateString,
+        },
+      },
+      _count: {
+        id: true,
+      },
+      _sum: {
+        cantidad: true,
+      },
+    });
+
+    if (exitsByProduct.length === 0) {
+      return undefined;
+    }
+
+    // Encontrar el producto con mayor cantidad de movimientos
+    const maxMovements = Math.max(...exitsByProduct.map((p) => p._count.id));
+
+    const mostMovedProductData = exitsByProduct.find(
+      (p) => p._count.id === maxMovements,
+    );
+
+    if (!mostMovedProductData) {
+      return undefined;
+    }
+
+    // Obtener datos completos del producto
+    const product = await this.prisma.product.findUnique({
+      where: {
+        codigo: mostMovedProductData.codigoProducto,
+      },
+      select: {
+        codigo: true,
+        nombre: true,
+        stockActual: true,
+      },
+    });
+
+    if (!product) {
+      return undefined;
+    }
+
+    return {
+      codigo: product.codigo,
+      nombre: product.nombre,
+      cantidadMovimientos: mostMovedProductData._count.id,
+      unidadesTotalesSalidas: mostMovedProductData._sum.cantidad || 0,
+      stockActual: product.stockActual,
+      periodo: `${periodoAnalisisDias} días`,
+    };
+  }
+
+  /**
+   * Formatea una fecha a formato DD/MM/YYYY
+   * @param date Fecha a formatear
+   * @returns Fecha en formato DD/MM/YYYY
+   */
+  private formatDateToDDMMYYYY(date: Date): string {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   }
 }
