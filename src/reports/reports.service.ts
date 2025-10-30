@@ -10,6 +10,7 @@ import { PdfExportService } from '../common/services/pdf-export.service';
 import {
   StockDashboardDto,
   CriticalProductDto,
+  LeastMovedProductDto,
 } from './dto/stock-dashboard.dto';
 
 // Interfaces para alertas de stock
@@ -643,11 +644,14 @@ export class ReportsService {
     // Obtener producto crítico (menor stock > 0, considerando porcentaje de stock mínimo)
     const productoCritico = await this.findCriticalProduct();
 
+    // Obtener producto menos movido (menor cantidad de movimientos de salida)
+    const productoMenosMovido = await this.findLeastMovedProduct();
+
     return {
       totalProductos,
       valorTotalInventario,
       productoCritico,
-      productoMenosMovido: undefined,
+      productoMenosMovido,
       productoMasMovido: undefined,
       periodoAnalisisDias,
     };
@@ -762,6 +766,62 @@ export class ReportsService {
           : 0,
       ubicacion: criticalProduct.ubicacion,
       categoria: criticalProduct.categoria || undefined,
+    };
+  }
+
+  /**
+   * Encuentra el producto menos movido (menor cantidad de movimientos de salida)
+   * Si un producto no tiene movimientos, se considera que tiene 1
+   * @returns Producto con menor cantidad de movimientos de salida o undefined si no hay productos
+   */
+  private async findLeastMovedProduct(): Promise<
+    LeastMovedProductDto | undefined
+  > {
+    // Obtener todos los productos con su conteo de movimientos de salida
+    const products = await this.prisma.product.findMany({
+      select: {
+        codigo: true,
+        nombre: true,
+        stockActual: true,
+        ubicacion: true,
+        _count: {
+          select: {
+            movementExits: true,
+          },
+        },
+      },
+    });
+
+    if (products.length === 0) {
+      return undefined;
+    }
+
+    // Aplicar lógica del "1 por defecto": si no tiene movimientos, se considera 1
+    const productsWithMovements = products.map((product) => ({
+      ...product,
+      movementCount: product._count.movementExits || 1,
+    }));
+
+    // Encontrar el menor número de movimientos
+    const minMovements = Math.min(
+      ...productsWithMovements.map((p) => p.movementCount),
+    );
+
+    // Encontrar el primer producto con el menor número de movimientos
+    const leastMovedProduct = productsWithMovements.find(
+      (p) => p.movementCount === minMovements,
+    );
+
+    if (!leastMovedProduct) {
+      return undefined;
+    }
+
+    return {
+      codigo: leastMovedProduct.codigo,
+      nombre: leastMovedProduct.nombre,
+      cantidadMovimientos: leastMovedProduct.movementCount,
+      stockActual: leastMovedProduct.stockActual,
+      ubicacion: leastMovedProduct.ubicacion,
     };
   }
 }
