@@ -1,0 +1,82 @@
+# ====================================
+# DEPENDENCIAS (se instalan con npm ci)
+# ====================================
+node_modules
+package-lock.json
+
+# ====================================
+# BUILD OUTPUTS (se generan con npm run build)
+# ====================================
+dist
+build
+*.tsbuildinfo
+
+# ====================================
+# ARCHIVOS SENSIBLES (seguridad)
+# ====================================
+.env
+.env.*
+!.env.example
+
+# ====================================
+# GIT 
+# ====================================
+.git
+.gitignore
+.gitattributes
+
+# ====================================
+# DOCKER
+# ====================================
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# ====================================
+# TESTING
+# ====================================
+test
+coverage
+.nyc_output
+*.test.ts
+*.spec.ts
+
+# ====================================
+# LOGS (pueden ser muy grandes)
+# ====================================
+logs
+*.log
+npm-debug.log*
+
+# ====================================
+# TEMPORALES
+# ====================================
+tmp
+temp
+*.tmp
+*.swp
+*.swo
+*~
+
+# ====================================
+# IDE 
+# ====================================
+.vscode
+.idea
+*.sublime-*
+
+# ====================================
+# OS (archivos del sistema operativo)
+# ====================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ====================================
+# DOCUMENTACIÓN (reduce tamaño)
+# ====================================
+README.md
+DOCKER.md
+docs
+*.md
+!package.json
