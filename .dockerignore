@@ -2,7 +2,6 @@
 # DEPENDENCIAS (se instalan con npm ci)
 # ====================================
 node_modules
-package-lock.json
 
 # ====================================
 # BUILD OUTPUTS (se generan con npm run build)
