@@ -23,11 +23,28 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Debug: Verificar archivos copiados
+RUN echo "=== Verificando archivos copiados ===" && \
+    ls -la && \
+    echo "=== Verificando src/ ===" && \
+    ls -la src/ && \
+    echo "=== Verificando tsconfig.json ===" && \
+    cat tsconfig.json && \
+    echo "=== Verificando nest-cli.json ===" && \
+    cat nest-cli.json
+
 # Generar Prisma Client
 RUN npx prisma generate
 
-# Build de NestJS (TypeScript)
-RUN npm run build
+# Build de NestJS (TypeScript) - con logs verbosos
+RUN echo "=== Iniciando build ===" && \
+    npm run build && \
+    echo "=== Build completado ===" && \
+    echo "=== Contenido del directorio dist: ===" && \
+    ls -la dist/ && \
+    echo "=== Verificando main.js ===" && \
+    test -f dist/main.js && \
+    echo "=== main.js encontrado correctamente ==="
 
 # ====================================
 # Stage 3: Runner (Producción)
