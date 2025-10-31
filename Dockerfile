@@ -13,7 +13,24 @@ COPY prisma ./prisma/
 RUN npm ci
 
 # ====================================
-# Stage 2: Builder
+# Stage 2: Production Dependencies
+# ====================================
+FROM node:20-alpine AS prod-deps
+
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Instalar SOLO dependencias de producción
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Generar Prisma Client para producción
+RUN npx prisma generate
+
+# ====================================
+# Stage 3: Builder
 # ====================================
 FROM node:20-alpine AS builder
 
@@ -23,33 +40,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Debug: Verificar archivos copiados
-RUN echo "=== Verificando archivos copiados ===" && \
-    ls -la && \
-    echo "=== Verificando src/ ===" && \
-    ls -la src/ && \
-    echo "=== Verificando tsconfig.json ===" && \
-    cat tsconfig.json && \
-    echo "=== Verificando nest-cli.json ===" && \
-    cat nest-cli.json
-
 # Generar Prisma Client
 RUN npx prisma generate
 
-# Build de NestJS (TypeScript) - con logs verbosos
-RUN echo "=== Iniciando build ===" && \
-    npm run build && \
-    echo "=== Build completado ===" && \
-    echo "=== Contenido del directorio dist: ===" && \
-    ls -la dist/ && \
-    echo "=== Verificando estructura de dist/src: ===" && \
-    ls -la dist/src/ && \
-    echo "=== Verificando main.js en dist/src/ ===" && \
-    test -f dist/src/main.js && \
-    echo "=== main.js encontrado correctamente en dist/src/ ==="
+# Build de NestJS (TypeScript)
+RUN npm run build
 
 # ====================================
-# Stage 3: Runner (Producción)
+# Stage 4: Runner (Producción)
 # ====================================
 FROM node:20-alpine AS runner
 
@@ -59,8 +57,10 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nestjs
 
-# Copiar archivos necesarios desde builder
-COPY --from=builder /app/node_modules ./node_modules
+# Copiar node_modules de producción desde prod-deps
+COPY --from=prod-deps /app/node_modules ./node_modules
+
+# Copiar archivos compilados desde builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package*.json ./
