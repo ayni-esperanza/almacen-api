@@ -13,10 +13,11 @@ import { PrismaService } from '../common/services/prisma.service';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
-        signOptions: { 
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '24h' 
+        signOptions: {
+          expiresIn: (configService.get<string>('JWT_EXPIRES_IN') ||
+            '24h') as any,
         },
       }),
       inject: [ConfigService],
