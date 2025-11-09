@@ -214,6 +214,11 @@ export class ReportsController {
     required: false,
     description: 'Show only critical alerts',
   })
+  @ApiQuery({
+    name: 'ocultarVistas',
+    required: false,
+    description: 'Hide viewed alerts (for notification bell)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Stock alerts retrieved successfully',
@@ -223,12 +228,14 @@ export class ReportsController {
     @Query('ubicacion') ubicacion?: string,
     @Query('estado') estado?: string,
     @Query('soloCriticos') soloCriticos?: string,
+    @Query('ocultarVistas') ocultarVistas?: string,
   ): Promise<any[]> {
     const filters = {
       categoria,
       ubicacion,
       estado,
       mostrarSoloCriticos: soloCriticos === 'true',
+      ocultarVistas: ocultarVistas === 'true',
     };
     return this.reportsService.getStockAlerts(filters);
   }
@@ -245,6 +252,20 @@ export class ReportsController {
   })
   getStockAlert(@Param('id') id: string): Promise<any> {
     return this.reportsService.getStockAlert(id);
+  }
+
+  @Post('stock-alerts/:id/mark-viewed')
+  @ApiOperation({ summary: 'Mark stock alert as viewed' })
+  @ApiResponse({
+    status: 200,
+    description: 'Stock alert marked as viewed successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Stock alert not found',
+  })
+  markAlertAsViewed(@Param('id') id: string): Promise<any> {
+    return this.reportsService.markAlertAsViewed(id);
   }
 
   @Get('stock-alerts/statistics')

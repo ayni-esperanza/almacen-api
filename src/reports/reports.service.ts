@@ -33,6 +33,7 @@ interface StockAlertFilters {
   ubicacion?: string;
   estado?: string;
   mostrarSoloCriticos?: boolean;
+  ocultarVistas?: boolean; // Nuevo filtro para ocultar alertas vistas
 }
 
 interface StockAlertStatistics {
@@ -339,6 +340,11 @@ export class ReportsService {
       where.ubicacion = { contains: filters.ubicacion, mode: 'insensitive' };
     }
 
+    // Filtrar solo productos no vistos si se solicita
+    if (filters.ocultarVistas) {
+      where.alertaVista = { not: true };
+    }
+
     // Obtener todos los productos
     const products = await this.prisma.product.findMany({
       where,
@@ -400,6 +406,44 @@ export class ReportsService {
     }
 
     const stockMinimo = product.stockMinimo || 10; // Usar el stock mínimo del producto o 10 por defecto
+    let estado: 'critico' | 'bajo' | 'normal' = 'normal';
+
+    if (product.stockActual === 0) {
+      estado = 'critico';
+    } else if (product.stockActual < stockMinimo) {
+      estado = product.stockActual <= 3 ? 'critico' : 'bajo';
+    }
+
+    return {
+      id: product.id.toString(),
+      codigo: product.codigo,
+      nombre: product.nombre,
+      stockActual: product.stockActual,
+      stockMinimo,
+      ubicacion: product.ubicacion,
+      categoria: product.categoria || 'Sin categoría',
+      proveedor: product.provider?.name || 'Sin proveedor',
+      ultimaActualizacion: product.updatedAt.toISOString().split('T')[0],
+      estado,
+    };
+  }
+
+  async markAlertAsViewed(id: string): Promise<StockAlert | null> {
+    // Actualizar el producto para marcar la alerta como vista
+    const product = await this.prisma.product.update({
+      where: { id: parseInt(id) },
+      data: {
+        alertaVista: true,
+        alertaVistaFecha: new Date(),
+      } as any,
+      include: { provider: true },
+    });
+
+    if (!product) {
+      return null;
+    }
+
+    const stockMinimo = product.stockMinimo || 10;
     let estado: 'critico' | 'bajo' | 'normal' = 'normal';
 
     if (product.stockActual === 0) {

@@ -51,6 +51,8 @@ model Product {
   marca         String?
   costoTotal    Float  @default(0)
   categoria     String?
+  alertaVista   Boolean @default(false)
+  alertaVistaFecha DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
