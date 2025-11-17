@@ -663,7 +663,7 @@ export class ReportsService {
     const alerts = await this.getStockAlerts(filters);
     const statistics = await this.getStockAlertStatistics();
 
-    return this.pdfExportService.generateStockAlertsPDF(alerts, statistics);
+    return this.pdfExportService.generateStockAlertsPDF(alerts, statistics, filters);
   }
 
   async exportExpenseReportPDF(filters: any): Promise<Buffer> {

@@ -192,6 +192,107 @@ export class ReportsController {
 
   // === STOCK ALERTS ENDPOINTS ===
 
+  @Get('stock-alerts/export')
+  @RequirePermissions(Permission.REPORTS_GENERATE)
+  @ApiOperation({ summary: 'Export stock alerts to PDF' })
+  @ApiQuery({
+    name: 'categoria',
+    required: false,
+    description: 'Filter by category',
+  })
+  @ApiQuery({
+    name: 'ubicacion',
+    required: false,
+    description: 'Filter by location',
+  })
+  @ApiQuery({
+    name: 'estado',
+    required: false,
+    description: 'Filter by status',
+  })
+  @ApiQuery({
+    name: 'soloCriticos',
+    required: false,
+    description: 'Show only critical alerts',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'PDF file generated successfully',
+  })
+  async exportStockAlertsPDF(
+    @Res() res: Response,
+    @Query('categoria') categoria?: string,
+    @Query('ubicacion') ubicacion?: string,
+    @Query('estado') estado?: string,
+    @Query('soloCriticos') soloCriticos?: string,
+  ): Promise<void> {
+    const filters = {
+      categoria,
+      ubicacion,
+      estado,
+      mostrarSoloCriticos: soloCriticos === 'true',
+    };
+
+    const pdfBuffer = await this.reportsService.exportStockAlertsPDF(filters);
+
+    // Generar nombre dinámico del archivo basado en los filtros
+    const parts: string[] = ['productos-con-stock'];
+    
+    if (estado) {
+      const estadoTexto = estado === 'critico' ? 'critico' : estado === 'bajo' ? 'bajo' : 'normal';
+      parts.push(estadoTexto);
+    }
+    
+    if (categoria) {
+      parts.push(categoria.toLowerCase().replace(/\s+/g, '-'));
+    }
+    
+    if (ubicacion) {
+      parts.push(ubicacion.toLowerCase().replace(/\s+/g, '-'));
+    }
+    
+    const fecha = new Date().toISOString().split('T')[0];
+    const filename = `${parts.join('-')}-${fecha}.pdf`;
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
+  }
+
+  @Get('stock-alerts/statistics')
+  @ApiOperation({ summary: 'Get stock alert statistics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Stock alert statistics retrieved successfully',
+  })
+  getStockAlertStatistics(): Promise<any> {
+    return this.reportsService.getStockAlertStatistics();
+  }
+
+  @Get('stock-alerts/filters/categories')
+  @ApiOperation({ summary: 'Get all available categories for stock alerts' })
+  @ApiResponse({
+    status: 200,
+    description: 'Categories retrieved successfully',
+  })
+  getStockAlertCategories(): Promise<string[]> {
+    return this.reportsService.getStockAlertCategories();
+  }
+
+  @Get('stock-alerts/filters/locations')
+  @ApiOperation({ summary: 'Get all available locations for stock alerts' })
+  @ApiResponse({
+    status: 200,
+    description: 'Locations retrieved successfully',
+  })
+  getStockAlertLocations(): Promise<string[]> {
+    return this.reportsService.getStockAlertLocations();
+  }
+
   @Get('stock-alerts')
   @ApiOperation({ summary: 'Get stock alerts' })
   @ApiQuery({
@@ -266,36 +367,6 @@ export class ReportsController {
   })
   markAlertAsViewed(@Param('id') id: string): Promise<any> {
     return this.reportsService.markAlertAsViewed(id);
-  }
-
-  @Get('stock-alerts/statistics')
-  @ApiOperation({ summary: 'Get stock alert statistics' })
-  @ApiResponse({
-    status: 200,
-    description: 'Stock alert statistics retrieved successfully',
-  })
-  getStockAlertStatistics(): Promise<any> {
-    return this.reportsService.getStockAlertStatistics();
-  }
-
-  @Get('stock-alerts/filters/categories')
-  @ApiOperation({ summary: 'Get all available categories for stock alerts' })
-  @ApiResponse({
-    status: 200,
-    description: 'Categories retrieved successfully',
-  })
-  getStockAlertCategories(): Promise<string[]> {
-    return this.reportsService.getStockAlertCategories();
-  }
-
-  @Get('stock-alerts/filters/locations')
-  @ApiOperation({ summary: 'Get all available locations for stock alerts' })
-  @ApiResponse({
-    status: 200,
-    description: 'Locations retrieved successfully',
-  })
-  getStockAlertLocations(): Promise<string[]> {
-    return this.reportsService.getStockAlertLocations();
   }
 
   // === EXPENSE REPORTS ENDPOINTS ===
@@ -409,58 +480,6 @@ export class ReportsController {
   }
 
   // === PDF EXPORT ENDPOINTS ===
-
-  @Get('stock-alerts/export')
-  @RequirePermissions(Permission.REPORTS_GENERATE)
-  @ApiOperation({ summary: 'Export stock alerts to PDF' })
-  @ApiQuery({
-    name: 'categoria',
-    required: false,
-    description: 'Filter by category',
-  })
-  @ApiQuery({
-    name: 'ubicacion',
-    required: false,
-    description: 'Filter by location',
-  })
-  @ApiQuery({
-    name: 'estado',
-    required: false,
-    description: 'Filter by status',
-  })
-  @ApiQuery({
-    name: 'soloCriticos',
-    required: false,
-    description: 'Show only critical alerts',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'PDF file generated successfully',
-  })
-  async exportStockAlertsPDF(
-    @Res() res: Response,
-    @Query('categoria') categoria?: string,
-    @Query('ubicacion') ubicacion?: string,
-    @Query('estado') estado?: string,
-    @Query('soloCriticos') soloCriticos?: string,
-  ): Promise<void> {
-    const filters = {
-      categoria,
-      ubicacion,
-      estado,
-      mostrarSoloCriticos: soloCriticos === 'true',
-    };
-
-    const pdfBuffer = await this.reportsService.exportStockAlertsPDF(filters);
-
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="alertas-stock-${new Date().toISOString().split('T')[0]}.pdf"`,
-      'Content-Length': pdfBuffer.length,
-    });
-
-    res.send(pdfBuffer);
-  }
 
   @Get('expenses/export')
   @RequirePermissions(Permission.REPORTS_GENERATE)
