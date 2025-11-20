@@ -497,6 +497,21 @@ export class ReportsController {
     required: false,
     description: 'Report type',
   })
+  @ApiQuery({
+    name: 'tipo',
+    required: false,
+    description: 'Export type: chart or table',
+  })
+  @ApiQuery({
+    name: 'mainChartType',
+    required: false,
+    description: 'Main chart type: bar, pie or line',
+  })
+  @ApiQuery({
+    name: 'monthlyChartType',
+    required: false,
+    description: 'Monthly chart type: bar, pie or line',
+  })
   @ApiResponse({
     status: 200,
     description: 'PDF file generated successfully',
@@ -508,6 +523,9 @@ export class ReportsController {
     @Query('area') area?: string,
     @Query('proyecto') proyecto?: string,
     @Query('tipoReporte') tipoReporte?: string,
+    @Query('tipo') tipo?: string,
+    @Query('mainChartType') mainChartType?: string,
+    @Query('monthlyChartType') monthlyChartType?: string,
   ): Promise<void> {
     const filters = {
       fechaInicio,
@@ -517,11 +535,20 @@ export class ReportsController {
       tipoReporte,
     };
 
-    const pdfBuffer = await this.reportsService.exportExpenseReportPDF(filters);
+    const exportType = tipo === 'chart' ? 'chart' : 'table';
+    const pdfBuffer = await this.reportsService.exportExpenseReportPDF(
+      filters, 
+      exportType, 
+      mainChartType as 'bar' | 'pie' | 'line' | undefined,
+      monthlyChartType as 'bar' | 'pie' | 'line' | undefined
+    );
+
+    const tipoTexto = exportType === 'chart' ? 'graficos' : 'tabla';
+    const filename = `reporte-gastos-${tipoTexto}-${new Date().toISOString().split('T')[0]}.pdf`;
 
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="reporte-gastos-${new Date().toISOString().split('T')[0]}.pdf"`,
+      'Content-Disposition': `attachment; filename="${filename}"`,
       'Content-Length': pdfBuffer.length,
     });
 

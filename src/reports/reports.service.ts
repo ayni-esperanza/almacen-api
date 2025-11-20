@@ -535,17 +535,6 @@ export class ReportsService {
   async getExpenseReports(filters: any): Promise<any[]> {
     const where: any = {};
 
-    // Aplicar filtros de fecha
-    if (filters.fechaInicio || filters.fechaFin) {
-      where.fecha = {};
-      if (filters.fechaInicio) {
-        where.fecha.gte = filters.fechaInicio;
-      }
-      if (filters.fechaFin) {
-        where.fecha.lte = filters.fechaFin;
-      }
-    }
-
     if (filters.area) {
       where.area = { contains: filters.area, mode: 'insensitive' };
     }
@@ -555,10 +544,44 @@ export class ReportsService {
     }
 
     // Obtener movimientos de salida (gastos)
-    const exits = await this.prisma.movementExit.findMany({
+    let exits = await this.prisma.movementExit.findMany({
       where,
       orderBy: { createdAt: 'desc' },
     });
+
+    // Filtrar por fechas después de obtener los datos
+    if (filters.fechaInicio || filters.fechaFin) {
+      exits = exits.filter((exit) => {
+        try {
+          // Convertir DD/MM/YYYY a Date para comparación
+          const [day, month, year] = exit.fecha.split('/').map(Number);
+          if (!day || !month || !year) {
+            return false;
+          }
+          const exitDate = new Date(year, month - 1, day);
+
+          let isInRange = true;
+
+          if (filters.fechaInicio) {
+            const [startYear, startMonth, startDay] = filters.fechaInicio.split('-').map(Number);
+            const startDate = new Date(startYear, startMonth - 1, startDay || 1);
+            if (exitDate < startDate) isInRange = false;
+          }
+
+          if (filters.fechaFin) {
+            const [endYear, endMonth, endDay] = filters.fechaFin.split('-').map(Number);
+            // Si no hay día, usar el último día del mes
+            const lastDay = endDay || new Date(endYear, endMonth, 0).getDate();
+            const endDate = new Date(endYear, endMonth - 1, lastDay, 23, 59, 59);
+            if (exitDate > endDate) isInRange = false;
+          }
+
+          return isInRange;
+        } catch (error) {
+          return false;
+        }
+      });
+    }
 
     return exits.map((exit) => ({
       id: exit.id,
@@ -666,10 +689,19 @@ export class ReportsService {
     return this.pdfExportService.generateStockAlertsPDF(alerts, statistics, filters);
   }
 
-  async exportExpenseReportPDF(filters: any): Promise<Buffer> {
+  async exportExpenseReportPDF(filters: any, tipo: 'chart' | 'table' = 'table', mainChartType?: 'bar' | 'pie' | 'line', monthlyChartType?: 'bar' | 'pie' | 'line'): Promise<Buffer> {
     const data = await this.getExpenseReports(filters);
+    
+    // Si es tipo chart, también obtener datos agrupados
+    let monthlyData: any[] | null = null;
+    let areaData: any[] | null = null;
+    
+    if (tipo === 'chart') {
+      monthlyData = await this.getMonthlyExpenseData(filters);
+      areaData = await this.getAreaExpenseData(filters);
+    }
 
-    return this.pdfExportService.generateExpenseReportPDF(data, filters);
+    return this.pdfExportService.generateExpenseReportPDF(data, filters, tipo, monthlyData, areaData, mainChartType, monthlyChartType);
   }
 
   /**
