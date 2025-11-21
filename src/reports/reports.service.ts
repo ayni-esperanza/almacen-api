@@ -540,7 +540,19 @@ export class ReportsService {
     }
 
     if (filters.proyecto) {
-      where.proyecto = { contains: filters.proyecto, mode: 'insensitive' };
+      const buildCondition = () => ({
+        contains: filters.proyecto,
+        mode: 'insensitive' as const,
+      });
+
+      if (!where.OR) {
+        where.OR = [];
+      }
+
+      where.OR.push(
+        { proyecto: buildCondition() },
+        { area: buildCondition() },
+      );
     }
 
     // Obtener movimientos de salida (gastos)
@@ -641,7 +653,17 @@ export class ReportsService {
 
     exits.forEach((exit) => {
       const area = exit.area || 'Sin área';
-      const proyecto = exit.proyecto || 'Sin proyecto';
+      let projectName = exit.proyecto;
+
+      if (!projectName) {
+        if (filters?.proyecto) {
+          projectName = filters.proyecto;
+        } else if (this.isProjectLabel(exit.area)) {
+          projectName = exit.area;
+        }
+      }
+
+      const proyecto = projectName || 'Sin proyecto';
 
       let areaInfo = areaData.get(area);
       if (!areaInfo) {
@@ -701,7 +723,15 @@ export class ReportsService {
       areaData = await this.getAreaExpenseData(filters);
     }
 
-    return this.pdfExportService.generateExpenseReportPDF(data, filters, tipo, monthlyData, areaData, mainChartType, monthlyChartType);
+    return this.pdfExportService.generateExpenseReportPDF(
+      data, 
+      filters, 
+      tipo, 
+      monthlyData, 
+      areaData, 
+      mainChartType || 'bar', 
+      monthlyChartType || 'bar'
+    );
   }
 
   /**
@@ -986,5 +1016,17 @@ export class ReportsService {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
+  }
+
+  private normalizeLabel(value?: string | null): string {
+    return value?.trim().toLowerCase() ?? '';
+  }
+
+  private isProjectLabel(value?: string | null): boolean {
+    const normalized = this.normalizeLabel(value);
+    if (!normalized) {
+      return false;
+    }
+    return normalized.startsWith('proyecto') || normalized.startsWith('proy ');
   }
 }

@@ -1,12 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
 
+type PdfChartDataPoint = { name: string; value: number; movements: number };
+interface LimitedChartData {
+  data: PdfChartDataPoint[];
+  truncated: boolean;
+  omittedCount?: number;
+}
+
 @Injectable()
 export class PdfExportService {
+  private readonly MAX_CHART_ITEMS = 12;
+  private readonly MAX_MONTH_POINTS = 15;
   
   async generateStockAlertsPDF(alerts: any[], statistics: any, filters?: any): Promise<Buffer> {
     return new Promise((resolve) => {
-      const doc = new PDFDocument();
+      const doc = new PDFDocument({ bufferPages: true });
       const chunks: Buffer[] = [];
       
       doc.on('data', (chunk) => chunks.push(chunk));
@@ -134,11 +143,12 @@ export class PdfExportService {
         currentY += rowHeight;
       });
       
-      // Footer
-      doc.fontSize(8)
-         .fillColor('#666666')
-         .text(`Generado el: ${new Date().toLocaleDateString('es-ES')}`, { align: 'right' });
-      
+      const pages = doc.bufferedPageRange();
+      for (let i = 0; i < pages.count; i++) {
+        doc.switchToPage(i);
+        // Se omite el pie de página para evitar páginas en blanco
+      }
+
       doc.end();
     });
   }
@@ -153,11 +163,17 @@ export class PdfExportService {
     monthlyChartType: 'bar' | 'pie' | 'line' = 'bar'
   ): Promise<Buffer> {
     return new Promise((resolve) => {
-      const doc = new PDFDocument();
+      const doc = new PDFDocument({ 
+        autoFirstPage: false,
+        bufferPages: true
+      });
       const chunks: Buffer[] = [];
       
       doc.on('data', (chunk) => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
+      
+      // Crear primera página
+      doc.addPage();
       
       // Header
       const titulo = tipo === 'chart' ? 'REPORTE DE GASTOS - GRÁFICOS' : 'REPORTE DE GASTOS - TABLA';
@@ -210,10 +226,12 @@ export class PdfExportService {
         this.generateTableView(doc, data);
       }
       
-      // Footer
-      doc.fontSize(8)
-         .fillColor('#666666')
-         .text(`Generado el: ${new Date().toLocaleDateString('es-ES')}`, { align: 'right' });
+      // Footer en la última página
+      const pages = doc.bufferedPageRange();
+      for (let i = 0; i < pages.count; i++) {
+        doc.switchToPage(i);
+        // Se omite el pie de página para evitar páginas en blanco
+      }
       
       doc.end();
     });
@@ -227,59 +245,30 @@ export class PdfExportService {
     mainChartType: 'bar' | 'pie' | 'line' = 'bar',
     monthlyChartType: 'bar' | 'pie' | 'line' = 'bar'
   ) {
-    // === GRÁFICO 1: GASTOS POR ÁREA/PROYECTO ===
-    const chartTypeLabel = mainChartType === 'bar' ? 'Barras' : mainChartType === 'pie' ? 'Circular' : 'Líneas';
-    doc.fontSize(14)
-       .font('Helvetica-Bold')
-       .fillColor('#2563eb')
-       .text(`GASTOS POR ${filters.tipoReporte === 'area' ? 'ÁREA' : 'PROYECTO'} (Gráfico de ${chartTypeLabel})`, { align: 'center' });
+    let hasRenderedFirstChart = false;
     
-    doc.moveDown(1);
-
+    // === GRÁFICO 1: GASTOS POR ÁREA/PROYECTO ===
     if (areaData && areaData.length > 0) {
-      const barMaxWidth = 400;
-      const barHeight = 25;
-      const startX = 50;
-      let currentY = doc.y;
+      hasRenderedFirstChart = true;
+      
+      const chartTypeLabel = mainChartType === 'bar' ? 'Barras' : mainChartType === 'pie' ? 'Circular' : 'Líneas';
+      doc.fontSize(14)
+         .font('Helvetica-Bold')
+         .fillColor('#2563eb')
+         .text(`GASTOS POR ${filters.tipoReporte === 'area' ? 'ÁREA' : 'PROYECTO'} (Gráfico de ${chartTypeLabel})`, { align: 'center' });
+      
+      doc.moveDown(1);
 
+      // Preparar datos según el tipo de reporte
+      let chartData: Array<{ name: string; value: number; movements: number }> = [];
+      
       if (filters.tipoReporte === 'area') {
-        // Mostrar datos por área
-        const maxTotal = Math.max(...areaData.map(area => area.totalGasto));
-        
-        areaData.forEach((area) => {
-          if (currentY > doc.page.height - 100) {
-            doc.addPage();
-            currentY = 50;
-          }
-
-          const barWidth = (area.totalGasto / maxTotal) * barMaxWidth;
-          
-          // Dibujar barra
-          doc.rect(startX + 120, currentY, barWidth, barHeight)
-             .fillColor('#3b82f6')
-             .fill();
-          
-          // Nombre del área
-          doc.fontSize(9)
-             .font('Helvetica-Bold')
-             .fillColor('#000000')
-             .text(area.area.length > 15 ? area.area.substring(0, 15) + '...' : area.area, startX, currentY + 8, { width: 110, align: 'left' });
-          
-          // Valor
-          doc.fontSize(8)
-             .font('Helvetica')
-             .fillColor('#000000')
-             .text(`S/ ${area.totalGasto.toFixed(2)}`, startX + 125 + barWidth, currentY + 5, { width: 100 });
-          
-          // Movimientos
-          doc.fontSize(7)
-             .fillColor('#666666')
-             .text(`(${area.cantidadMovimientos} mov.)`, startX + 125 + barWidth, currentY + 15, { width: 100 });
-          
-          currentY += barHeight + 5;
-        });
+        chartData = areaData.map(area => ({
+          name: area.area,
+          value: area.totalGasto,
+          movements: area.cantidadMovimientos
+        }));
       } else {
-        // Mostrar datos por proyecto (agregados de todas las áreas)
         const projectData = new Map<string, { totalGasto: number; cantidadMovimientos: number }>();
         
         areaData.forEach(area => {
@@ -292,64 +281,63 @@ export class PdfExportService {
           });
         });
 
-        const sortedProjects = Array.from(projectData.entries())
-          .sort((a, b) => b[1].totalGasto - a[1].totalGasto);
-
-        const maxTotal = Math.max(...sortedProjects.map(([_, stats]) => stats.totalGasto));
-
-        sortedProjects.forEach(([proyecto, stats]) => {
-          if (currentY > doc.page.height - 100) {
-            doc.addPage();
-            currentY = 50;
-          }
-
-          const barWidth = (stats.totalGasto / maxTotal) * barMaxWidth;
-          
-          // Dibujar barra
-          doc.rect(startX + 120, currentY, barWidth, barHeight)
-             .fillColor('#3b82f6')
-             .fill();
-          
-          // Nombre del proyecto
-          doc.fontSize(9)
-             .font('Helvetica-Bold')
-             .fillColor('#000000')
-             .text(proyecto.length > 15 ? proyecto.substring(0, 15) + '...' : proyecto, startX, currentY + 8, { width: 110, align: 'left' });
-          
-          // Valor
-          doc.fontSize(8)
-             .font('Helvetica')
-             .fillColor('#000000')
-             .text(`S/ ${stats.totalGasto.toFixed(2)}`, startX + 125 + barWidth, currentY + 5, { width: 100 });
-          
-          // Movimientos
-          doc.fontSize(7)
-             .fillColor('#666666')
-             .text(`(${stats.cantidadMovimientos} mov.)`, startX + 125 + barWidth, currentY + 15, { width: 100 });
-          
-          currentY += barHeight + 5;
-        });
+        chartData = Array.from(projectData.entries())
+          .sort((a, b) => b[1].totalGasto - a[1].totalGasto)
+          .map(([name, stats]) => ({
+            name,
+            value: stats.totalGasto,
+            movements: stats.cantidadMovimientos
+          }));
       }
 
-      doc.y = currentY;
+      const { data: limitedChartData, truncated: mainChartTruncated } = this.limitChartItems(chartData, this.MAX_CHART_ITEMS);
+
+      if (limitedChartData.length === 0) {
+        doc.fontSize(10)
+           .font('Helvetica')
+           .fillColor('#6b7280')
+           .text('Sin datos suficientes para generar el gráfico.');
+      } else {
+        // Renderizar según el tipo de gráfico
+        if (mainChartType === 'pie') {
+          this.renderPieChart(doc, limitedChartData, '#3b82f6');
+        } else if (mainChartType === 'line') {
+          this.renderLineChart(doc, limitedChartData, '#3b82f6');
+        } else {
+          this.renderBarChart(doc, limitedChartData, '#3b82f6', 50, 120);
+        }
+
+        if (mainChartTruncated) {
+          const visibleCount = Math.max(1, this.MAX_CHART_ITEMS - 1);
+          this.renderTruncationNote(
+            doc,
+            `Nota: Se muestran las ${visibleCount} categorías con mayor gasto y el resto se agrupa en "Otros" para mantener el gráfico en una sola página.`
+          );
+        }
+      }
     }
 
     // === GRÁFICO 2: GASTOS MENSUALES ===
-    doc.moveDown(2);
-    
-    const monthlyChartTypeLabel = monthlyChartType === 'bar' ? 'Barras' : monthlyChartType === 'pie' ? 'Circular' : 'Líneas';
-    doc.fontSize(14)
-       .font('Helvetica-Bold')
-       .fillColor('#2563eb')
-       .text(`GASTOS MENSUALES (Gráfico de ${monthlyChartTypeLabel})`, { align: 'center' });
-    
-    doc.moveDown(1);
-
     if (monthlyData && monthlyData.length > 0) {
-      const barMaxWidth = 400;
-      const barHeight = 25;
-      const startX = 50;
-      let currentY = doc.y;
+      // Si ya renderizamos el primer gráfico, verificar si necesitamos nueva página
+      if (hasRenderedFirstChart) {
+        const estimatedHeight = monthlyChartType === 'pie' ? 400 : monthlyChartType === 'line' ? 400 : (Math.min(monthlyData.length, 10) * 30 + 150);
+        
+        // Verificar espacio disponible
+        if (doc.y + estimatedHeight > doc.page.height - 80) {
+          doc.addPage();
+        } else {
+          doc.moveDown(2);
+        }
+      }
+      
+      const monthlyChartTypeLabel = monthlyChartType === 'bar' ? 'Barras' : monthlyChartType === 'pie' ? 'Circular' : 'Líneas';
+      doc.fontSize(14)
+         .font('Helvetica-Bold')
+         .fillColor('#2563eb')
+         .text(`GASTOS MENSUALES (Gráfico de ${monthlyChartTypeLabel})`, { align: 'center' });
+      
+      doc.moveDown(1);
 
       // Ordenar por mes
       const sortedMonthly = monthlyData.sort((a, b) => {
@@ -358,43 +346,301 @@ export class PdfExportService {
         return (parseInt(yearA) * 12 + parseInt(monthA)) - (parseInt(yearB) * 12 + parseInt(monthB));
       });
 
-      const maxMonthlyTotal = Math.max(...sortedMonthly.map(month => month.gasto));
+      const monthlyChartData = sortedMonthly.map(month => ({
+        name: month.mes,
+        value: month.gasto,
+        movements: month.movimientos
+      }));
 
-      sortedMonthly.forEach((month) => {
-        if (currentY > doc.page.height - 100) {
-          doc.addPage();
-          currentY = 50;
+      const { data: limitedMonthlyData, truncated: monthlyTruncated, omittedCount } = this.limitMonthlySeries(monthlyChartData, this.MAX_MONTH_POINTS);
+
+      if (limitedMonthlyData.length === 0) {
+        doc.fontSize(10)
+           .font('Helvetica')
+           .fillColor('#6b7280')
+           .text('Sin datos suficientes para generar el gráfico.');
+      } else {
+        // Renderizar según el tipo de gráfico
+        if (monthlyChartType === 'pie') {
+          this.renderPieChart(doc, limitedMonthlyData, '#10b981');
+        } else if (monthlyChartType === 'line') {
+          this.renderLineChart(doc, limitedMonthlyData, '#10b981');
+        } else {
+          this.renderBarChart(doc, limitedMonthlyData, '#10b981', 50, 80);
         }
 
-        const barWidth = (month.gasto / maxMonthlyTotal) * barMaxWidth;
-        
-        // Dibujar barra
-        doc.rect(startX + 80, currentY, barWidth, barHeight)
-           .fillColor('#10b981')
-           .fill();
-        
-        // Mes
-        doc.fontSize(9)
-           .font('Helvetica-Bold')
-           .fillColor('#000000')
-           .text(month.mes, startX, currentY + 8, { width: 70, align: 'left' });
-        
-        // Valor
-        doc.fontSize(8)
-           .font('Helvetica')
-           .fillColor('#000000')
-           .text(`S/ ${month.gasto.toFixed(2)}`, startX + 85 + barWidth, currentY + 5, { width: 100 });
-        
-        // Movimientos
-        doc.fontSize(7)
-           .fillColor('#666666')
-           .text(`(${month.movimientos} mov.)`, startX + 85 + barWidth, currentY + 15, { width: 100 });
-        
-        currentY += barHeight + 5;
-      });
-
-      doc.y = currentY;
+        if (monthlyTruncated) {
+          const omitted = omittedCount || 0;
+          this.renderTruncationNote(
+            doc,
+            `Nota: Se muestran los últimos ${this.MAX_MONTH_POINTS} meses del periodo${omitted > 0 ? ` (se omitieron ${omitted} meses iniciales)` : ''} para mantener el gráfico en una sola página.`
+          );
+        }
+      }
     }
+  }
+
+  private renderBarChart(doc: any, data: Array<{ name: string; value: number; movements: number }>, color: string, startX: number, labelWidth: number) {
+    const barMaxWidth = 400;
+    const barHeight = 25;
+    let currentY = doc.y;
+    const rawMax = data.length ? Math.max(...data.map(item => item.value)) : 0;
+    const maxValue = rawMax <= 0 ? 1 : rawMax;
+
+    data.forEach((item, index) => {
+      // Solo crear nueva página si realmente no cabe este elemento
+      const neededSpace = barHeight + 5;
+      if (currentY + neededSpace > doc.page.height - 80) {
+        doc.addPage();
+        currentY = 50;
+      }
+
+      const barWidth = (item.value / maxValue) * barMaxWidth;
+      
+      // Dibujar barra
+      doc.rect(startX + labelWidth, currentY, barWidth, barHeight)
+         .fillColor(color)
+         .fill();
+      
+      // Nombre
+      doc.fontSize(9)
+         .font('Helvetica-Bold')
+         .fillColor('#000000')
+         .text(item.name.length > 15 ? item.name.substring(0, 15) + '...' : item.name, startX, currentY + 8, { width: labelWidth - 10, align: 'left' });
+      
+      // Valor
+      doc.fontSize(8)
+         .font('Helvetica')
+         .fillColor('#000000')
+         .text(`S/ ${item.value.toFixed(2)}`, startX + labelWidth + barWidth + 5, currentY + 5, { width: 100 });
+      
+      // Movimientos
+      doc.fontSize(7)
+         .fillColor('#666666')
+         .text(`(${item.movements} mov.)`, startX + labelWidth + barWidth + 5, currentY + 15, { width: 100 });
+      
+      currentY += barHeight + 5;
+    });
+
+    doc.y = currentY;
+  }
+
+  private renderPieChart(doc: any, data: Array<{ name: string; value: number; movements: number }>, baseColor: string) {
+    if (!data || data.length === 0) {
+      doc.fontSize(10)
+         .font('Helvetica')
+         .fillColor('#6b7280')
+         .text('Sin datos disponibles para mostrar.');
+      doc.moveDown(1);
+      return;
+    }
+
+    const radius = 100;
+    const legendItemHeight = 15;
+    const totalLegendHeight = data.length * legendItemHeight;
+    const chartDiameter = radius * 2;
+    const spacingAbove = 30;
+    const spacingBelow = 40;
+    const totalRequired = chartDiameter + totalLegendHeight + spacingAbove + spacingBelow;
+
+    // Verificar espacio disponible y crear nueva página solo si es absolutamente necesario
+    const availableSpace = doc.page.height - doc.y - 60; // 60px margen inferior
+    if (availableSpace < totalRequired) {
+      doc.addPage();
+    }
+    
+    const centerX = doc.page.width / 2;
+    const centerY = doc.y + radius + spacingAbove;
+    
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+    if (total <= 0) {
+      doc.fontSize(10)
+         .font('Helvetica')
+         .fillColor('#6b7280')
+         .text('Sin valores disponibles para graficar.');
+      doc.moveDown(1);
+      return;
+    }
+    const basePalette = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+    const colors = [baseColor, ...basePalette].filter(
+      (color, index, array) => color && array.indexOf(color) === index
+    );
+    
+    let currentAngle = -Math.PI / 2;
+    
+    // Dibujar cada segmento del pie
+    data.forEach((item, index) => {
+      const percentage = item.value / total;
+      const sliceAngle = percentage * 2 * Math.PI;
+      const color = colors[index % colors.length];
+      
+      doc.moveTo(centerX, centerY);
+      doc.lineTo(centerX + radius * Math.cos(currentAngle), centerY + radius * Math.sin(currentAngle));
+      
+      const steps = Math.max(10, Math.floor(sliceAngle * 20));
+      for (let i = 0; i <= steps; i++) {
+        const angle = currentAngle + (sliceAngle * i / steps);
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        doc.lineTo(x, y);
+      }
+      
+      doc.lineTo(centerX, centerY);
+      doc.fillColor(color).fill();
+      
+      currentAngle += sliceAngle;
+    });
+    
+    // Leyenda
+    let legendY = centerY + radius + 25;
+    const legendX = 50;
+    
+    data.forEach((item, index) => {
+      const color = colors[index % colors.length];
+      const percentage = ((item.value / total) * 100).toFixed(1);
+      
+      doc.rect(legendX, legendY - 8, 10, 10)
+         .fillColor(color)
+         .fill();
+      
+      doc.fontSize(9)
+         .font('Helvetica')
+         .fillColor('#000000')
+         .text(`${item.name}: S/ ${item.value.toFixed(2)} (${percentage}%) - ${item.movements} mov.`, legendX + 15, legendY - 5, { width: 500 });
+      
+      legendY += legendItemHeight;
+    });
+    
+    doc.y = legendY + 5;
+  }
+
+  private renderLineChart(doc: any, data: Array<{ name: string; value: number; movements: number }>, color: string) {
+    const chartWidth = 450;
+    const chartHeight = 200;
+    const legendItemHeight = 12;
+    const totalLegendHeight = data.length * legendItemHeight;
+    const axisLabelSpace = 60;
+    const totalRequired = chartHeight + axisLabelSpace + totalLegendHeight + 40;
+    
+    // Verificar espacio disponible
+    const availableSpace = doc.page.height - doc.y - 60;
+    if (availableSpace < totalRequired) {
+      doc.addPage();
+    }
+    
+    const startX = 80;
+    const startY = doc.y + 20;
+    const rawMax = data.length ? Math.max(...data.map(item => item.value)) : 0;
+    const maxValue = rawMax <= 0 ? 1 : rawMax;
+    const step = chartWidth / (data.length - 1 || 1);
+    
+    // Dibujar ejes
+    doc.strokeColor('#666666')
+       .lineWidth(1)
+       .moveTo(startX, startY)
+      .lineTo(startX, startY + chartHeight)
+      .lineTo(startX + chartWidth, startY + chartHeight)
+    
+    // Dibujar líneas de la gráfica
+    doc.strokeColor(color)
+       .lineWidth(2);
+    
+    data.forEach((item, index) => {
+      const x = startX + (index * step);
+      const y = startY + chartHeight - ((item.value / maxValue) * chartHeight);
+      
+      if (index === 0) {
+        doc.moveTo(x, y);
+      } else {
+        doc.lineTo(x, y);
+      }
+    });
+    
+    doc.stroke();
+    
+    // Dibujar puntos
+    data.forEach((item, index) => {
+      const x = startX + (index * step);
+      const y = startY + chartHeight - ((item.value / maxValue) * chartHeight);
+      
+      doc.circle(x, y, 4)
+         .fillColor(color)
+         .fill();
+    });
+    
+    // Etiquetas del eje X (nombres)
+    doc.fontSize(7)
+       .fillColor('#666666');
+    
+    data.forEach((item, index) => {
+      const x = startX + (index * step);
+      doc.save();
+      doc.translate(x, startY + chartHeight + 5);
+      doc.rotate(-45);
+      doc.text(item.name.length > 10 ? item.name.substring(0, 10) + '...' : item.name, 0, 0);
+      doc.restore();
+    });
+    
+    // Valores y leyenda
+    let legendY = startY + chartHeight + 45;
+    const legendX = 50;
+    
+    doc.fontSize(8)
+       .fillColor('#000000');
+    
+    data.forEach((item) => {
+      doc.text(`${item.name}: S/ ${item.value.toFixed(2)} (${item.movements} mov.)`, legendX, legendY, { width: 500 });
+      legendY += legendItemHeight;
+    });
+    
+    doc.y = legendY + 5;
+  }
+
+  private limitChartItems(items: PdfChartDataPoint[] = [], maxItems?: number): LimitedChartData {
+    const limit = maxItems ?? this.MAX_CHART_ITEMS;
+    if (!items || items.length <= limit) {
+      return { data: items ?? [], truncated: false };
+    }
+
+    const safeLimit = Math.max(2, limit);
+    const sorted = [...items].sort((a, b) => b.value - a.value);
+    const kept = sorted.slice(0, safeLimit - 1);
+    const remainder = sorted.slice(safeLimit - 1).reduce(
+      (acc, item) => {
+        acc.value += item.value;
+        acc.movements += item.movements;
+        return acc;
+      },
+      { name: 'Otros', value: 0, movements: 0 }
+    );
+
+    if (remainder.value > 0 || remainder.movements > 0) {
+      kept.push(remainder);
+    }
+
+    return { data: kept, truncated: true };
+  }
+
+  private limitMonthlySeries(items: PdfChartDataPoint[] = [], maxItems?: number): LimitedChartData {
+    const limit = maxItems ?? this.MAX_MONTH_POINTS;
+    if (!items || items.length <= limit) {
+      return { data: items ?? [], truncated: false };
+    }
+
+    const sliceStart = items.length - limit;
+    return {
+      data: items.slice(sliceStart),
+      truncated: true,
+      omittedCount: sliceStart,
+    };
+  }
+
+  private renderTruncationNote(doc: any, message: string) {
+    doc.moveDown(0.35);
+    doc.fontSize(8)
+       .fillColor('#6b7280')
+       .text(message, { align: 'center' });
+    doc.moveDown(0.4);
   }
 
   private generateTableView(doc: any, data: any[]) {
