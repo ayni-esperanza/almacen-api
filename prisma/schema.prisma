@@ -18,17 +18,17 @@ enum UserRole {
 }
 
 model User {
-  id              Int @id @default(autoincrement())
-  username        String @unique
+  id              Int      @id @default(autoincrement())
+  username        String   @unique
   password        String
-  email           String? @unique
+  email           String?  @unique
   firstName       String?
   lastName        String?
   phoneNumber     String?
   avatarUrl       String?
   role            UserRole @default(AYUDANTE)
-  isActive        Boolean @default(true)
-  isAuthenticated Boolean @default(false)
+  isActive        Boolean  @default(true)
+  isAuthenticated Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -37,68 +37,74 @@ model User {
 
 // === PRODUCT/INVENTORY MODELS ===
 model Product {
-  id            Int @id @default(autoincrement())
-  codigo        String @unique
-  nombre        String
-  costoUnitario Float
-  ubicacion     String
-  entradas      Int    @default(0)
-  salidas       Int    @default(0) 
-  stockActual   Int    @default(0)
-  stockMinimo   Int    @default(0)
-  unidadMedida  String
-  providerId    Int    // Foreign key
-  marca         String?
-  costoTotal    Float  @default(0)
-  categoria     String?
-  alertaVista   Boolean @default(false)
+  id               Int       @id @default(autoincrement())
+  codigo           String    @unique
+  nombre           String
+  costoUnitario    Float
+  ubicacion        String
+  entradas         Int       @default(0)
+  salidas          Int       @default(0) 
+  stockActual      Int       @default(0)
+  stockMinimo      Int       @default(0)
+  unidadMedida     String
+  providerId       Int       // Foreign key
+  marca            String?
+  costoTotal       Float     @default(0)
+  categoria        String?
+  alertaVista      Boolean   @default(false)
   alertaVistaFecha DateTime?
-  deletedAt     DateTime? // Null = Activo, Fecha = Eliminado
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  deletedAt        DateTime? // Null = Activo, Fecha = Eliminado
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   // Relations
-  provider        Provider @relation(fields: [providerId], references: [id])
-  movementEntries MovementEntry[]
-  movementExits   MovementExit[]
+  provider         Provider  @relation(fields: [providerId], references: [id])
+  movementEntries  MovementEntry[]
+  movementExits    MovementExit[]
 
   @@map("products")
 }
 
 // === MOVEMENT MODELS ===
 model MovementEntry {
-  id             Int @id @default(autoincrement())
-  fecha          String // Format: "DD/MM/YYYY"
+  id             Int      @id @default(autoincrement())
+  fecha          String   // Format: "DD/MM/YYYY"
   codigoProducto String
   descripcion    String
   precioUnitario Float
   cantidad       Int
   responsable    String?
-  area          String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  area           String?
+  
+  deletedAt      DateTime?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  product       Product @relation(fields: [codigoProducto], references: [codigo])
+  product        Product  @relation(fields: [codigoProducto], references: [codigo])
 
   @@map("movement_entries")
 }
 
 model MovementExit {
-  id             Int @id @default(autoincrement())
-  fecha          String // Format: "DD/MM/YYYY"
+  id             Int      @id @default(autoincrement())
+  fecha          String   // Format: "DD/MM/YYYY"
   codigoProducto String
   descripcion    String
   precioUnitario Float
   cantidad       Int
   responsable    String?
-  area          String?
-  proyecto      String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  area           String?
+  proyecto       String?
+  
+  deletedAt      DateTime?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  product       Product @relation(fields: [codigoProducto], references: [codigo])
+  product        Product  @relation(fields: [codigoProducto], references: [codigo])
 
   @@map("movement_exits")
 }
@@ -113,21 +119,21 @@ enum EstadoEquipo {
 }
 
 model EquipmentReport {
-  id              Int @id @default(autoincrement())
-  equipo          String
-  serieCodigo     String
-  cantidad        Int
-  estadoEquipo    EstadoEquipo
-  responsable     String
-  fechaSalida     String
-  horaSalida      String
-  areaProyecto    String
-  fechaRetorno    String?
-  horaRetorno     String?
-  estadoRetorno   EstadoEquipo?
+  id                 Int          @id @default(autoincrement())
+  equipo             String
+  serieCodigo        String
+  cantidad           Int
+  estadoEquipo       EstadoEquipo
+  responsable        String
+  fechaSalida        String
+  horaSalida         String
+  areaProyecto       String
+  fechaRetorno       String?
+  horaRetorno        String?
+  estadoRetorno      EstadoEquipo?
   responsableRetorno String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
   @@map("equipment_reports")
 }
@@ -140,6 +146,9 @@ model Provider {
   address   String
   phones    String[] // Array de strings para múltiples teléfonos
   photoUrl  String?
+  
+  deletedAt DateTime?
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -151,14 +160,14 @@ model Provider {
 
 // === CONFIGURATION MODELS ===
 model Area {
-  id     Int @id @default(autoincrement())
+  id     Int    @id @default(autoincrement())
   nombre String @unique
 
   @@map("areas")
 }
 
 model Categoria {
-  id     Int @id @default(autoincrement())
+  id     Int    @id @default(autoincrement())
   nombre String @unique
 
   @@map("categorias")

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Patch,
   Param,
@@ -189,5 +190,39 @@ export class MovementsController {
     @Body() updateExitQuantityDto: UpdateExitQuantityDto,
   ): Promise<MovementExitResponseDto> {
     return this.movementsService.updateExitQuantity(+id, updateExitQuantityDto);
+  }
+
+  @Delete('entries/:id')
+  @RequirePermissions(Permission.MOVEMENTS_DELETE)
+  @ApiOperation({ summary: 'Delete (soft) entry movement and revert stock' })
+  @ApiResponse({
+    status: 200,
+    description: 'Entry deleted and stock reverted successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Insufficient stock to revert the entry',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Entry movement not found',
+  })
+  removeEntry(@Param('id') id: string): Promise<void> {
+    return this.movementsService.removeEntry(+id);
+  }
+
+  @Delete('exits/:id')
+  @RequirePermissions(Permission.MOVEMENTS_DELETE)
+  @ApiOperation({ summary: 'Delete (soft) exit movement and revert stock' })
+  @ApiResponse({
+    status: 200,
+    description: 'Exit deleted and stock reverted successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Exit movement not found',
+  })
+  removeExit(@Param('id') id: string): Promise<void> {
+    return this.movementsService.removeExit(+id);
   }
 }

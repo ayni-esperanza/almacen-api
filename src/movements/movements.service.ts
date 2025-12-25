@@ -73,20 +73,17 @@ export class MovementsService {
   }
 
   async findAllEntries(search?: string): Promise<MovementEntryResponseDto[]> {
-    const where = search
-      ? {
-          OR: [
-            {
-              codigoProducto: {
-                contains: search,
-                mode: 'insensitive' as const,
-              },
-            },
-            { descripcion: { contains: search, mode: 'insensitive' as const } },
-            { responsable: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+    const where: any = {
+      deletedAt: null, // SOLO ACTIVOS
+    };
+
+    if (search) {
+      where.OR = [
+        { codigoProducto: { contains: search, mode: 'insensitive' } },
+        { descripcion: { contains: search, mode: 'insensitive' } },
+        { responsable: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
     const entries = await this.prisma.movementEntry.findMany({
       where,
@@ -97,21 +94,18 @@ export class MovementsService {
   }
 
   async findAllExits(search?: string): Promise<MovementExitResponseDto[]> {
-    const where = search
-      ? {
-          OR: [
-            {
-              codigoProducto: {
-                contains: search,
-                mode: 'insensitive' as const,
-              },
-            },
-            { descripcion: { contains: search, mode: 'insensitive' as const } },
-            { responsable: { contains: search, mode: 'insensitive' as const } },
-            { proyecto: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+    const where: any = {
+      deletedAt: null, // SOLO ACTIVOS
+    };
+
+    if (search) {
+      where.OR = [
+        { codigoProducto: { contains: search, mode: 'insensitive' } },
+        { descripcion: { contains: search, mode: 'insensitive' } },
+        { responsable: { contains: search, mode: 'insensitive' } },
+        { proyecto: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
     const exits = await this.prisma.movementExit.findMany({
       where,
@@ -122,8 +116,11 @@ export class MovementsService {
   }
 
   async findExitById(id: number): Promise<MovementExitResponseDto> {
-    const exit = await this.prisma.movementExit.findUnique({
-      where: { id },
+    const exit = await this.prisma.movementExit.findFirst({
+      where: {
+        id,
+        deletedAt: null, // SOLO ACTIVOS
+      },
     });
 
     if (!exit) {
@@ -134,8 +131,11 @@ export class MovementsService {
   }
 
   async findEntryById(id: number): Promise<MovementEntryResponseDto> {
-    const entry = await this.prisma.movementEntry.findUnique({
-      where: { id },
+    const entry = await this.prisma.movementEntry.findFirst({
+      where: {
+        id,
+        deletedAt: null, // SOLO ACTIVOS
+      },
     });
 
     if (!entry) {
@@ -283,6 +283,56 @@ export class MovementsService {
     });
 
     return this.mapExitToResponse(updatedExit);
+  }
+
+  async removeEntry(id: number): Promise<void> {
+    // Obtener la entrada (valida si existe y no está borrada)
+    const entry = await this.findEntryById(id);
+
+    // Verificar stock del producto
+    const product = await this.inventoryService.findByCode(
+      entry.codigoProducto,
+    );
+
+    // sin romper la coherencia (quedaría stock negativo).
+    if (product.stockActual < entry.cantidad) {
+      throw new BadRequestException(
+        `Cannot delete entry. Insufficient stock to revert operation. Current: ${product.stockActual}, Required to revert: ${entry.cantidad}`,
+      );
+    }
+
+    // Revertir Stock (Restar lo que se sumó)
+    // Pasamos 0 entradas y 'cantidad' en salidas para restar
+    await this.inventoryService.updateStock(
+      entry.codigoProducto,
+      0,
+      entry.cantidad,
+    );
+
+    // Soft Delete
+    await this.prisma.movementEntry.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  async removeExit(id: number): Promise<void> {
+    // Obtener la salida
+    const exit = await this.findExitById(id);
+
+    // Revertir Stock (Sumar lo que se restó)
+    // Pasamos 'cantidad' en entradas y 0 salidas para sumar
+    await this.inventoryService.updateStock(
+      exit.codigoProducto,
+      exit.cantidad,
+      0,
+    );
+
+    // Soft Delete
+    await this.prisma.movementExit.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 
   async searchMovements(query: string): Promise<{

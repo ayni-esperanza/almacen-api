@@ -13,13 +13,16 @@ export class MovementEntryResponseDto {
   @ApiProperty({ example: 'AFLOJA TODO', description: 'Product description' })
   descripcion: string;
 
-  @ApiProperty({ example: 12.00, description: 'Unit price' })
+  @ApiProperty({ example: 12.0, description: 'Unit price' })
   precioUnitario: number;
 
   @ApiProperty({ example: 5, description: 'Quantity entered' })
   cantidad: number;
 
-  @ApiPropertyOptional({ example: 'Juan Pérez', description: 'Responsible person' })
+  @ApiPropertyOptional({
+    example: 'Juan Pérez',
+    description: 'Responsible person',
+  })
   responsable?: string;
 
   @ApiPropertyOptional({ example: 'ALMACEN', description: 'Target area' })
@@ -45,19 +48,25 @@ export class MovementExitResponseDto {
   @ApiProperty({ example: 'AFLOJA TODO', description: 'Product description' })
   descripcion: string;
 
-  @ApiProperty({ example: 12.00, description: 'Unit price' })
+  @ApiProperty({ example: 12.0, description: 'Unit price' })
   precioUnitario: number;
 
   @ApiProperty({ example: 2, description: 'Quantity exited' })
   cantidad: number;
 
-  @ApiPropertyOptional({ example: 'Juan Pérez', description: 'Responsible person' })
+  @ApiPropertyOptional({
+    example: 'Juan Pérez',
+    description: 'Responsible person',
+  })
   responsable?: string;
 
   @ApiPropertyOptional({ example: 'MECANICA', description: 'Source area' })
   area?: string;
 
-  @ApiPropertyOptional({ example: 'Proyecto ABC', description: 'Project assignment' })
+  @ApiPropertyOptional({
+    example: 'Proyecto ABC',
+    description: 'Project assignment',
+  })
   proyecto?: string;
 
   @ApiProperty({ description: 'Creation date' })
