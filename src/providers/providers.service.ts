@@ -15,7 +15,9 @@ export class ProvidersService {
   async create(
     createProviderDto: CreateProviderDto,
   ): Promise<ProviderResponseDto> {
-    // Check if email already exists
+    // Verificar si el email ya existe (y está activo)
+    // findUnique busca en toda la tabla, incluso borrados,
+    // pero como renombramos el email al borrar, findUnique es seguro.
     const existingProvider = await this.prisma.provider.findUnique({
       where: { email: createProviderDto.email },
     });
@@ -35,6 +37,7 @@ export class ProvidersService {
 
   async findAll(): Promise<ProviderResponseDto[]> {
     const providers = await this.prisma.provider.findMany({
+      where: { deletedAt: null }, // Solo activos
       orderBy: { createdAt: 'desc' },
     });
 
@@ -42,8 +45,11 @@ export class ProvidersService {
   }
 
   async findOne(id: number): Promise<ProviderResponseDto> {
-    const provider = await this.prisma.provider.findUnique({
-      where: { id },
+    const provider = await this.prisma.provider.findFirst({
+      where: {
+        id,
+        deletedAt: null, // Solo activos
+      },
     });
 
     if (!provider) {
@@ -57,14 +63,15 @@ export class ProvidersService {
     id: number,
     updateProviderDto: UpdateProviderDto,
   ): Promise<ProviderResponseDto> {
-    await this.findOne(id); // Check if exists
+    await this.findOne(id); // Valida existencia y estado activo
 
-    // If email is being updated, check for conflicts
+    // Si se actualiza el email, verificar conflictos
     if (updateProviderDto.email) {
       const conflictingProvider = await this.prisma.provider.findUnique({
         where: { email: updateProviderDto.email },
       });
 
+      // Conflicto solo si existe y es otro usuario
       if (conflictingProvider && conflictingProvider.id !== id) {
         throw new ConflictException(
           `Provider with email ${updateProviderDto.email} already exists`,
@@ -81,16 +88,23 @@ export class ProvidersService {
   }
 
   async remove(id: number): Promise<{ message: string }> {
-    await this.findOne(id); // Check if exists
+    const provider = await this.findOne(id); // Obtener datos actuales
 
-    await this.prisma.provider.delete({
+    // Generar email de archivo para liberar el UNIQUE constraint
+    const timestamp = new Date().getTime();
+    const archivedEmail = `${provider.email}_deleted_${timestamp}`;
+
+    await this.prisma.provider.update({
       where: { id },
+      data: {
+        deletedAt: new Date(), // Marcar como borrado
+        email: archivedEmail, // Liberar el email original
+      },
     });
 
     return { message: 'Provider deleted successfully' };
   }
 
-  // Private helper method (DRY principle)
   private mapToResponse(provider: any): ProviderResponseDto {
     return {
       ...provider,
