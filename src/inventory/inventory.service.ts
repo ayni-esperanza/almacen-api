@@ -15,7 +15,6 @@ export class InventoryService {
   async create(
     createProductDto: CreateProductDto,
   ): Promise<ProductResponseDto> {
-    // Check if product code already exists
     const existingProduct = await this.prisma.product.findUnique({
       where: { codigo: createProductDto.codigo },
     });
@@ -48,20 +47,22 @@ export class InventoryService {
   }
 
   async findAll(search?: string): Promise<ProductResponseDto[]> {
-    const where = search
-      ? {
-          OR: [
-            { codigo: { contains: search, mode: 'insensitive' as const } },
-            { nombre: { contains: search, mode: 'insensitive' as const } },
-            {
-              provider: {
-                name: { contains: search, mode: 'insensitive' as const },
-              },
-            },
-            { marca: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+    const where: any = {
+      deletedAt: null, // FILTRO PARA PRODUCTOS NO ELIMINADOS
+    };
+
+    if (search) {
+      where.OR = [
+        { codigo: { contains: search, mode: 'insensitive' } },
+        { nombre: { contains: search, mode: 'insensitive' } },
+        {
+          provider: {
+            name: { contains: search, mode: 'insensitive' },
+          },
+        },
+        { marca: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
     const products = await this.prisma.product.findMany({
       where,
@@ -77,8 +78,12 @@ export class InventoryService {
   }
 
   async findOne(id: number): Promise<ProductResponseDto> {
-    const product = await this.prisma.product.findUnique({
-      where: { id },
+    const product = await this.prisma.product.findFirst({
+      // Cambie findUnique por findFirst para usar filtros compuestos si fuera necesario, aunque unique id basta
+      where: {
+        id,
+        deletedAt: null, // Solo activos
+      },
       include: { provider: true },
     });
 
@@ -95,7 +100,10 @@ export class InventoryService {
 
   async findByCode(codigo: string): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findUnique({
-      where: { codigo },
+      where: {
+        codigo,
+        deletedAt: null, // Solo activos
+      },
       include: { provider: true },
     });
 
@@ -147,10 +155,7 @@ export class InventoryService {
 
     const product = await this.prisma.product.update({
       where: { id },
-      data: {
-        ...updateProductDto,
-        costoTotal,
-      },
+      data: { ...updateProductDto, costoTotal },
     });
 
     // If nombre is being updated, update descripcion in all related movements and equipment reports
@@ -185,13 +190,21 @@ export class InventoryService {
   }
 
   async remove(id: number): Promise<{ message: string }> {
-    await this.findOne(id); // Check if exists
+    const product = await this.findOne(id); // Verifica que exista y esté activo
 
-    await this.prisma.product.delete({
+    // Generamos un código temporal para liberar el 'unique constraint'
+    const timestamp = new Date().getTime();
+    const archivedCode = `${product.codigo}_del_${timestamp}`;
+
+    await this.prisma.product.update({
       where: { id },
+      data: {
+        deletedAt: new Date(), // Marcamos fecha de borrado
+        codigo: archivedCode, // Liberamos el código original para que pueda reutilizarse
+      },
     });
 
-    return { message: 'Product deleted successfully' };
+    return { message: 'Product deleted successfully (logical)' };
   }
 
   async getAreas(search?: string): Promise<{ nombre: string }[]> {

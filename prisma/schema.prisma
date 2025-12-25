@@ -53,6 +53,7 @@ model Product {
   categoria     String?
   alertaVista   Boolean @default(false)
   alertaVistaFecha DateTime?
+  deletedAt     DateTime? // Null = Activo, Fecha = Eliminado
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
