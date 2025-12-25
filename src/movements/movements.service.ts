@@ -285,8 +285,7 @@ export class MovementsService {
     return this.mapExitToResponse(updatedExit);
   }
 
-  async removeEntry(id: number): Promise<void> {
-    // Obtener la entrada (valida si existe y no está borrada)
+  async removeEntry(id: number): Promise<{ message: string }> {
     const entry = await this.findEntryById(id);
 
     // Verificar stock del producto
@@ -314,10 +313,11 @@ export class MovementsService {
       where: { id },
       data: { deletedAt: new Date() },
     });
+
+    return { message: 'Entry deleted successfully' };
   }
 
-  async removeExit(id: number): Promise<void> {
-    // Obtener la salida
+  async removeExit(id: number): Promise<{ message: string }> {
     const exit = await this.findExitById(id);
 
     // Revertir Stock (Sumar lo que se restó)
@@ -333,6 +333,8 @@ export class MovementsService {
       where: { id },
       data: { deletedAt: new Date() },
     });
+
+    return { message: 'Exit deleted successfully' };
   }
 
   async searchMovements(query: string): Promise<{

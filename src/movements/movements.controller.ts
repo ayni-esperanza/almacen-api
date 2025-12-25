@@ -207,7 +207,7 @@ export class MovementsController {
     status: 404,
     description: 'Entry movement not found',
   })
-  removeEntry(@Param('id') id: string): Promise<void> {
+  removeEntry(@Param('id') id: string): Promise<{ message: string }> {
     return this.movementsService.removeEntry(+id);
   }
 
@@ -222,7 +222,7 @@ export class MovementsController {
     status: 404,
     description: 'Exit movement not found',
   })
-  removeExit(@Param('id') id: string): Promise<void> {
+  removeExit(@Param('id') id: string): Promise<{ message: string }> {
     return this.movementsService.removeExit(+id);
   }
 }
