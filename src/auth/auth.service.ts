@@ -142,7 +142,7 @@ export class AuthService {
       } catch (error) {
         // Si falla la subida, continuar sin avatar pero registrar el error
         console.error('Error uploading avatar:', error.message);
-        avatarUrl = null;
+        avatarUrl = undefined;
       }
     }
 

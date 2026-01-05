@@ -43,7 +43,7 @@ export class ProvidersService {
       } catch (error) {
         // Si falla la subida, continuar sin foto pero registrar el error
         console.error('Error uploading provider photo:', error.message);
-        photoUrl = null;
+        photoUrl = undefined;
       }
     }
 
