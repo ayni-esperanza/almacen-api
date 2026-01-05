@@ -82,6 +82,16 @@ export class MovementsController {
   @RequirePermissions(Permission.MOVEMENTS_READ)
   @ApiOperation({ summary: 'Get all entry movements' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: 'Start date filter (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: 'End date filter (YYYY-MM-DD)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Entries retrieved successfully',
@@ -89,14 +99,26 @@ export class MovementsController {
   })
   findAllEntries(
     @Query('q') search?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ): Promise<MovementEntryResponseDto[]> {
-    return this.movementsService.findAllEntries(search);
+    return this.movementsService.findAllEntries(search, startDate, endDate);
   }
 
   @Get('exits')
   @RequirePermissions(Permission.MOVEMENTS_READ)
   @ApiOperation({ summary: 'Get all exit movements' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: 'Start date filter (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: 'End date filter (YYYY-MM-DD)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Exits retrieved successfully',
@@ -104,8 +126,10 @@ export class MovementsController {
   })
   findAllExits(
     @Query('q') search?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ): Promise<MovementExitResponseDto[]> {
-    return this.movementsService.findAllExits(search);
+    return this.movementsService.findAllExits(search, startDate, endDate);
   }
 
   @Get('search')

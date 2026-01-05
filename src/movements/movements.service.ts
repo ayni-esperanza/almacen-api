@@ -72,7 +72,11 @@ export class MovementsService {
     return this.mapExitToResponse(exit);
   }
 
-  async findAllEntries(search?: string): Promise<MovementEntryResponseDto[]> {
+  async findAllEntries(
+    search?: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<MovementEntryResponseDto[]> {
     const where: any = {
       deletedAt: null, // SOLO ACTIVOS
     };
@@ -90,10 +94,28 @@ export class MovementsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return entries.map((entry) => this.mapEntryToResponse(entry));
+    // Filtrar por fecha en memoria ya que el campo fecha es String en formato DD/MM/YYYY
+    let filteredEntries = entries;
+    if (startDate || endDate) {
+      filteredEntries = entries.filter((entry) => {
+        // Convertir DD/MM/YYYY a YYYY-MM-DD para comparación
+        const [day, month, year] = entry.fecha.split('/');
+        const entryDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+        if (startDate && entryDate < startDate) return false;
+        if (endDate && entryDate > endDate) return false;
+        return true;
+      });
+    }
+
+    return filteredEntries.map((entry) => this.mapEntryToResponse(entry));
   }
 
-  async findAllExits(search?: string): Promise<MovementExitResponseDto[]> {
+  async findAllExits(
+    search?: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<MovementExitResponseDto[]> {
     const where: any = {
       deletedAt: null, // SOLO ACTIVOS
     };
@@ -112,7 +134,21 @@ export class MovementsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return exits.map((exit) => this.mapExitToResponse(exit));
+    // Filtrar por fecha en memoria ya que el campo fecha es String en formato DD/MM/YYYY
+    let filteredExits = exits;
+    if (startDate || endDate) {
+      filteredExits = exits.filter((exit) => {
+        // Convertir DD/MM/YYYY a YYYY-MM-DD para comparación
+        const [day, month, year] = exit.fecha.split('/');
+        const exitDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+        if (startDate && exitDate < startDate) return false;
+        if (endDate && exitDate > endDate) return false;
+        return true;
+      });
+    }
+
+    return filteredExits.map((exit) => this.mapExitToResponse(exit));
   }
 
   async findExitById(id: number): Promise<MovementExitResponseDto> {
