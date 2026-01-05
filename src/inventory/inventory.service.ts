@@ -67,7 +67,7 @@ export class InventoryService {
     const products = await this.prisma.product.findMany({
       where,
       include: { provider: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { nombre: 'asc' },
     });
 
     return products.map((product) => ({
