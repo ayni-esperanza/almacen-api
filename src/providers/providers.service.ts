@@ -4,13 +4,17 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../common/services/prisma.service';
+import { UploadService } from '../common/services/upload.service';
 import { CreateProviderDto } from './dto/create-provider.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { ProviderResponseDto } from './dto/provider-response.dto';
 
 @Injectable()
 export class ProvidersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   async create(
     createProviderDto: CreateProviderDto,
@@ -28,8 +32,26 @@ export class ProvidersService {
       );
     }
 
+    // Manejar foto si viene en Base64
+    let photoUrl = createProviderDto.photoUrl;
+    if (photoUrl && this.uploadService.isBase64(photoUrl)) {
+      try {
+        photoUrl = await this.uploadService.uploadImageFromBase64(
+          photoUrl,
+          'providers',
+        );
+      } catch (error) {
+        // Si falla la subida, continuar sin foto pero registrar el error
+        console.error('Error uploading provider photo:', error.message);
+        photoUrl = null;
+      }
+    }
+
     const provider = await this.prisma.provider.create({
-      data: createProviderDto,
+      data: {
+        ...createProviderDto,
+        photoUrl,
+      },
     });
 
     return this.mapToResponse(provider);
@@ -63,7 +85,7 @@ export class ProvidersService {
     id: number,
     updateProviderDto: UpdateProviderDto,
   ): Promise<ProviderResponseDto> {
-    await this.findOne(id); // Valida existencia y estado activo
+    const existingProvider = await this.findOne(id); // Valida existencia y estado activo
 
     // Si se actualiza el email, verificar conflictos
     if (updateProviderDto.email) {
@@ -79,9 +101,35 @@ export class ProvidersService {
       }
     }
 
+    // Manejar foto si viene en Base64
+    const updateData = { ...updateProviderDto };
+    if (
+      updateProviderDto.photoUrl &&
+      this.uploadService.isBase64(updateProviderDto.photoUrl)
+    ) {
+      try {
+        // Subir nueva imagen
+        const newPhotoUrl = await this.uploadService.uploadImageFromBase64(
+          updateProviderDto.photoUrl,
+          'providers',
+        );
+
+        // Eliminar foto anterior si existe y es una URL de R2
+        if (existingProvider.photoUrl) {
+          await this.uploadService.deleteImage(existingProvider.photoUrl);
+        }
+
+        updateData.photoUrl = newPhotoUrl;
+      } catch (error) {
+        // Si falla la subida, continuar sin actualizar foto pero registrar el error
+        console.error('Error uploading provider photo:', error.message);
+        delete updateData.photoUrl;
+      }
+    }
+
     const provider = await this.prisma.provider.update({
       where: { id },
-      data: updateProviderDto,
+      data: updateData,
     });
 
     return this.mapToResponse(provider);

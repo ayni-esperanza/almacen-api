@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../common/services/prisma.service';
+import { UploadService } from '../common/services/upload.service';
 import * as bcrypt from 'bcrypt';
 import { AuthUser, JwtPayload } from '../common/interfaces/auth.interface';
 import { LoginDto } from './dto/login.dto';
@@ -19,6 +20,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private uploadService: UploadService,
   ) {}
 
   async validateUser(
@@ -129,11 +131,27 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
+    // Manejar avatar si viene en Base64
+    let avatarUrl = createUserDto.avatarUrl;
+    if (avatarUrl && this.uploadService.isBase64(avatarUrl)) {
+      try {
+        avatarUrl = await this.uploadService.uploadImageFromBase64(
+          avatarUrl,
+          'users',
+        );
+      } catch (error) {
+        // Si falla la subida, continuar sin avatar pero registrar el error
+        console.error('Error uploading avatar:', error.message);
+        avatarUrl = null;
+      }
+    }
+
     // Create user
     const user = await this.prisma.user.create({
       data: {
         ...createUserDto,
         password: hashedPassword,
+        avatarUrl,
       },
       select: {
         id: true,
@@ -265,6 +283,31 @@ export class AuthService {
     const updateData = { ...updateUserDto };
     if (updateUserDto.password) {
       updateData.password = await bcrypt.hash(updateUserDto.password, 10);
+    }
+
+    // Manejar avatar si viene en Base64
+    if (
+      updateUserDto.avatarUrl &&
+      this.uploadService.isBase64(updateUserDto.avatarUrl)
+    ) {
+      try {
+        // Subir nueva imagen
+        const newAvatarUrl = await this.uploadService.uploadImageFromBase64(
+          updateUserDto.avatarUrl,
+          'users',
+        );
+
+        // Eliminar avatar anterior si existe y es una URL de R2
+        if (existingUser.avatarUrl) {
+          await this.uploadService.deleteImage(existingUser.avatarUrl);
+        }
+
+        updateData.avatarUrl = newAvatarUrl;
+      } catch (error) {
+        // Si falla la subida, continuar sin actualizar avatar pero registrar el error
+        console.error('Error uploading avatar:', error.message);
+        delete updateData.avatarUrl;
+      }
     }
 
     const user = await this.prisma.user.update({
