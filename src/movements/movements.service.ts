@@ -513,4 +513,23 @@ export class MovementsService {
       updatedAt: exit.updatedAt,
     };
   }
+
+  async getAreas(search?: string): Promise<{ nombre: string }[]> {
+    const where = search
+      ? { nombre: { contains: search, mode: 'insensitive' as const } }
+      : {};
+
+    return this.prisma.area.findMany({
+      where,
+      select: { nombre: true },
+      orderBy: { nombre: 'asc' },
+    });
+  }
+
+  async createArea(nombre: string): Promise<{ nombre: string }> {
+    return this.prisma.area.create({
+      data: { nombre },
+      select: { nombre: true },
+    });
+  }
 }

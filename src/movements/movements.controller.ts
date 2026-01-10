@@ -307,4 +307,35 @@ export class MovementsController {
   removeExit(@Param('id') id: string): Promise<{ message: string }> {
     return this.movementsService.removeExit(+id);
   }
+
+  @Get('areas')
+  @RequirePermissions(Permission.MOVEMENTS_READ)
+  @ApiOperation({ summary: 'Get all available areas for movements' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search query for filtering areas',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Areas retrieved successfully',
+  })
+  getAreas(@Query('search') search?: string): Promise<{ nombre: string }[]> {
+    return this.movementsService.getAreas(search);
+  }
+
+  @Post('areas')
+  @RequirePermissions(Permission.MOVEMENTS_CREATE)
+  @ApiOperation({ summary: 'Create a new area for movements' })
+  @ApiResponse({
+    status: 201,
+    description: 'Area created successfully',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Area already exists',
+  })
+  createArea(@Body() body: { nombre: string }): Promise<{ nombre: string }> {
+    return this.movementsService.createArea(body.nombre);
+  }
 }
