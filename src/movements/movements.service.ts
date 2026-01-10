@@ -76,7 +76,17 @@ export class MovementsService {
     search?: string,
     startDate?: string,
     endDate?: string,
-  ): Promise<MovementEntryResponseDto[]> {
+    page: number = 1,
+    limit: number = 100,
+  ): Promise<{
+    data: MovementEntryResponseDto[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
     const where: any = {
       deletedAt: null, // SOLO ACTIVOS
     };
@@ -89,16 +99,16 @@ export class MovementsService {
       ];
     }
 
-    const entries = await this.prisma.movementEntry.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    });
-
-    // Filtrar por fecha en memoria ya que el campo fecha es String en formato DD/MM/YYYY
-    let filteredEntries = entries;
+    // Si hay filtros de fecha, primero obtenemos todos para filtrar en memoria
+    // (ya que fecha es String en formato DD/MM/YYYY)
     if (startDate || endDate) {
-      filteredEntries = entries.filter((entry) => {
-        // Convertir DD/MM/YYYY a YYYY-MM-DD para comparación
+      const allEntries = await this.prisma.movementEntry.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Filtrar por fecha en memoria
+      const filteredEntries = allEntries.filter((entry) => {
         const [day, month, year] = entry.fecha.split('/');
         const entryDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 
@@ -106,16 +116,63 @@ export class MovementsService {
         if (endDate && entryDate > endDate) return false;
         return true;
       });
+
+      // Aplicar paginación manual
+      const total = filteredEntries.length;
+      const totalPages = Math.ceil(total / limit);
+      const skip = (page - 1) * limit;
+      const paginatedEntries = filteredEntries.slice(skip, skip + limit);
+
+      return {
+        data: paginatedEntries.map((entry) => this.mapEntryToResponse(entry)),
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
+      };
     }
 
-    return filteredEntries.map((entry) => this.mapEntryToResponse(entry));
+    // Sin filtros de fecha, usar paginación nativa de Prisma
+    const [entries, total] = await Promise.all([
+      this.prisma.movementEntry.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.movementEntry.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: entries.map((entry) => this.mapEntryToResponse(entry)),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
   }
 
   async findAllExits(
     search?: string,
     startDate?: string,
     endDate?: string,
-  ): Promise<MovementExitResponseDto[]> {
+    page: number = 1,
+    limit: number = 100,
+  ): Promise<{
+    data: MovementExitResponseDto[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
     const where: any = {
       deletedAt: null, // SOLO ACTIVOS
     };
@@ -129,16 +186,16 @@ export class MovementsService {
       ];
     }
 
-    const exits = await this.prisma.movementExit.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    });
-
-    // Filtrar por fecha en memoria ya que el campo fecha es String en formato DD/MM/YYYY
-    let filteredExits = exits;
+    // Si hay filtros de fecha, primero obtenemos todos para filtrar en memoria
+    // (ya que fecha es String en formato DD/MM/YYYY)
     if (startDate || endDate) {
-      filteredExits = exits.filter((exit) => {
-        // Convertir DD/MM/YYYY a YYYY-MM-DD para comparación
+      const allExits = await this.prisma.movementExit.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Filtrar por fecha en memoria
+      const filteredExits = allExits.filter((exit) => {
         const [day, month, year] = exit.fecha.split('/');
         const exitDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 
@@ -146,9 +203,46 @@ export class MovementsService {
         if (endDate && exitDate > endDate) return false;
         return true;
       });
+
+      // Aplicar paginación manual
+      const total = filteredExits.length;
+      const totalPages = Math.ceil(total / limit);
+      const skip = (page - 1) * limit;
+      const paginatedExits = filteredExits.slice(skip, skip + limit);
+
+      return {
+        data: paginatedExits.map((exit) => this.mapExitToResponse(exit)),
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
+      };
     }
 
-    return filteredExits.map((exit) => this.mapExitToResponse(exit));
+    // Sin filtros de fecha, usar paginación nativa de Prisma
+    const [exits, total] = await Promise.all([
+      this.prisma.movementExit.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.movementExit.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: exits.map((exit) => this.mapExitToResponse(exit)),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
   }
 
   async findExitById(id: number): Promise<MovementExitResponseDto> {
@@ -377,12 +471,15 @@ export class MovementsService {
     entries: MovementEntryResponseDto[];
     exits: MovementExitResponseDto[];
   }> {
-    const [entries, exits] = await Promise.all([
-      this.findAllEntries(query),
-      this.findAllExits(query),
+    const [entriesResult, exitsResult] = await Promise.all([
+      this.findAllEntries(query, undefined, undefined, 1, 1000),
+      this.findAllExits(query, undefined, undefined, 1, 1000),
     ]);
 
-    return { entries, exits };
+    return {
+      entries: entriesResult.data,
+      exits: exitsResult.data,
+    };
   }
 
   // Helper methods to map Prisma entities to response DTOs

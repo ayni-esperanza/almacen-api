@@ -92,17 +92,46 @@ export class MovementsController {
     required: false,
     description: 'End date filter (YYYY-MM-DD)',
   })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number (starts at 1)',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page',
+    type: Number,
+  })
   @ApiResponse({
     status: 200,
     description: 'Entries retrieved successfully',
-    type: [MovementEntryResponseDto],
   })
-  findAllEntries(
+  async findAllEntries(
     @Query('q') search?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-  ): Promise<MovementEntryResponseDto[]> {
-    return this.movementsService.findAllEntries(search, startDate, endDate);
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<{
+    data: MovementEntryResponseDto[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 100;
+    return this.movementsService.findAllEntries(
+      search,
+      startDate,
+      endDate,
+      pageNum,
+      limitNum,
+    );
   }
 
   @Get('exits')
@@ -119,17 +148,46 @@ export class MovementsController {
     required: false,
     description: 'End date filter (YYYY-MM-DD)',
   })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number (starts at 1)',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page',
+    type: Number,
+  })
   @ApiResponse({
     status: 200,
     description: 'Exits retrieved successfully',
-    type: [MovementExitResponseDto],
   })
-  findAllExits(
+  async findAllExits(
     @Query('q') search?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-  ): Promise<MovementExitResponseDto[]> {
-    return this.movementsService.findAllExits(search, startDate, endDate);
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<{
+    data: MovementExitResponseDto[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 100;
+    return this.movementsService.findAllExits(
+      search,
+      startDate,
+      endDate,
+      pageNum,
+      limitNum,
+    );
   }
 
   @Get('search')
