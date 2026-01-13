@@ -28,6 +28,9 @@ export class MovementEntryResponseDto {
   @ApiPropertyOptional({ example: 'ALMACEN', description: 'Target area' })
   area?: string;
 
+  @ApiPropertyOptional({ example: 'EPP', description: 'Product category' })
+  categoria?: string;
+
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;
 
@@ -68,7 +71,8 @@ export class MovementExitResponseDto {
     description: 'Project assignment',
   })
   proyecto?: string;
-
+  @ApiPropertyOptional({ example: 'EPP', description: 'Product category' })
+  categoria?: string;
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;
 

@@ -25,12 +25,17 @@ export class MovementsService {
   async createEntry(
     createEntryDto: CreateEntryDto,
   ): Promise<MovementEntryResponseDto> {
-    // Verify product exists
-    await this.inventoryService.findByCode(createEntryDto.codigoProducto);
+    // Verify product exists and get its category
+    const product = await this.inventoryService.findByCode(
+      createEntryDto.codigoProducto,
+    );
 
-    // Create the entry
+    // Create the entry with product category
     const entry = await this.prisma.movementEntry.create({
-      data: createEntryDto,
+      data: {
+        ...createEntryDto,
+        categoria: product.categoria || undefined,
+      },
     });
 
     // Update product stock
@@ -57,9 +62,12 @@ export class MovementsService {
       );
     }
 
-    // Create the exit
+    // Create the exit with product category
     const exit = await this.prisma.movementExit.create({
-      data: createExitDto,
+      data: {
+        ...createExitDto,
+        categoria: product.categoria || undefined,
+      },
     });
 
     // Update product stock
@@ -493,6 +501,7 @@ export class MovementsService {
       cantidad: entry.cantidad,
       responsable: entry.responsable || undefined,
       area: entry.area || undefined,
+      categoria: entry.categoria || undefined,
       createdAt: entry.createdAt,
       updatedAt: entry.updatedAt,
     };
@@ -509,6 +518,7 @@ export class MovementsService {
       responsable: exit.responsable || undefined,
       area: exit.area || undefined,
       proyecto: exit.proyecto || undefined,
+      categoria: exit.categoria || undefined,
       createdAt: exit.createdAt,
       updatedAt: exit.updatedAt,
     };

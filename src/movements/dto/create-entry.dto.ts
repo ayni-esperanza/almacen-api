@@ -48,4 +48,9 @@ export class CreateEntryDto {
   @IsString()
   @IsOptional()
   area?: string;
+
+  @ApiPropertyOptional({ example: 'EPP', description: 'Product category' })
+  @IsString()
+  @IsOptional()
+  categoria?: string;
 }

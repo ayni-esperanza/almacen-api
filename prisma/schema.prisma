@@ -75,6 +75,7 @@ model MovementEntry {
   cantidad       Int
   responsable    String?
   area           String?
+  categoria      String?
   
   deletedAt      DateTime?
   
@@ -97,6 +98,7 @@ model MovementExit {
   responsable    String?
   area           String?
   proyecto       String?
+  categoria      String?
   
   deletedAt      DateTime?
   

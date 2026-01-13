@@ -56,4 +56,9 @@ export class CreateExitDto {
   @IsString()
   @IsOptional()
   proyecto?: string;
+
+  @ApiPropertyOptional({ example: 'EPP', description: 'Product category' })
+  @IsString()
+  @IsOptional()
+  categoria?: string;
 }
