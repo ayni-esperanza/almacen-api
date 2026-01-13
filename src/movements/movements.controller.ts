@@ -352,4 +352,23 @@ export class MovementsController {
   createArea(@Body() body: { nombre: string }): Promise<{ nombre: string }> {
     return this.movementsService.createArea(body.nombre);
   }
+
+  @Post('backfill-categorias')
+  @RequirePermissions(Permission.MOVEMENTS_UPDATE)
+  @ApiOperation({
+    summary: 'Backfill categoria field for existing movements',
+    description:
+      'One-time migration utility to update existing movements with categoria from current product data',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Backfill completed',
+  })
+  async backfillCategorias(): Promise<{
+    entriesUpdated: number;
+    exitsUpdated: number;
+    errors: string[];
+  }> {
+    return this.movementsService.backfillCategorias();
+  }
 }

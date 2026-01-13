@@ -552,4 +552,72 @@ export class MovementsService {
       select: { nombre: true },
     });
   }
+
+  /**
+   * Backfill categoria for existing movements from current product data
+   * This is a one-time migration utility
+   */
+  async backfillCategorias(): Promise<{
+    entriesUpdated: number;
+    exitsUpdated: number;
+    errors: string[];
+  }> {
+    const errors: string[] = [];
+    let entriesUpdated = 0;
+    let exitsUpdated = 0;
+
+    // Update entries
+    const entries = await this.prisma.movementEntry.findMany({
+      where: {
+        OR: [{ categoria: null }, { categoria: '' }],
+      },
+    });
+
+    for (const entry of entries) {
+      try {
+        const product = await this.inventoryService.findByCode(
+          entry.codigoProducto,
+        );
+        if (product.categoria) {
+          await this.prisma.movementEntry.update({
+            where: { id: entry.id },
+            data: { categoria: product.categoria },
+          });
+          entriesUpdated++;
+        }
+      } catch (error) {
+        errors.push(
+          `Entry ${entry.id} (${entry.codigoProducto}): ${error.message}`,
+        );
+      }
+    }
+
+    // Update exits
+    const exits = await this.prisma.movementExit.findMany({
+      where: {
+        OR: [{ categoria: null }, { categoria: '' }],
+      },
+    });
+
+    for (const exit of exits) {
+      try {
+        const product = await this.inventoryService.findByCode(
+          exit.codigoProducto,
+        );
+        if (product.categoria) {
+          await this.prisma.movementExit.update({
+            where: { id: exit.id },
+            data: { categoria: product.categoria },
+          });
+          exitsUpdated++;
+        }
+      } catch (error) {
+        errors.push(
+          `Exit ${exit.id} (${exit.codigoProducto}): ${error.message}`,
+        );
+      }
+    }
+
+    return { entriesUpdated, exitsUpdated, errors };
+  }
 }
