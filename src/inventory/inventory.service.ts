@@ -46,7 +46,20 @@ export class InventoryService {
     };
   }
 
-  async findAll(search?: string): Promise<ProductResponseDto[]> {
+  async findAll(
+    search?: string,
+    categoria?: string,
+    page: number = 1,
+    limit: number = 100,
+  ): Promise<{
+    data: ProductResponseDto[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
     const where: any = {
       deletedAt: null, // FILTRO PARA PRODUCTOS NO ELIMINADOS
     };
@@ -64,17 +77,37 @@ export class InventoryService {
       ];
     }
 
-    const products = await this.prisma.product.findMany({
-      where,
-      include: { provider: true },
-      orderBy: { nombre: 'asc' },
-    });
+    if (categoria) {
+      where.categoria = { equals: categoria, mode: 'insensitive' };
+    }
 
-    return products.map((product) => ({
-      ...product,
-      categoria: product.categoria || undefined,
-      marca: product.marca || undefined,
-    }));
+    // Usar paginación nativa de Prisma
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        include: { provider: true },
+        orderBy: { nombre: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: products.map((product) => ({
+        ...product,
+        categoria: product.categoria || undefined,
+        marca: product.marca || undefined,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
   }
 
   async findOne(id: number): Promise<ProductResponseDto> {

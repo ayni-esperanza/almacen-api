@@ -54,13 +54,44 @@ export class InventoryController {
   @RequirePermissions(Permission.INVENTORY_READ)
   @ApiOperation({ summary: 'Get all products' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
+  @ApiQuery({
+    name: 'categoria',
+    required: false,
+    description: 'Filter by category (e.g., "epp")',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number (starts at 1)',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page',
+    type: Number,
+  })
   @ApiResponse({
     status: 200,
     description: 'Products retrieved successfully',
-    type: [ProductResponseDto],
   })
-  findAll(@Query('q') search?: string): Promise<ProductResponseDto[]> {
-    return this.inventoryService.findAll(search);
+  async findAll(
+    @Query('q') search?: string,
+    @Query('categoria') categoria?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<{
+    data: ProductResponseDto[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 100;
+    return this.inventoryService.findAll(search, categoria, pageNum, limitNum);
   }
 
   @Get('areas')
@@ -133,13 +164,44 @@ export class InventoryController {
   @RequirePermissions(Permission.INVENTORY_READ)
   @ApiOperation({ summary: 'Search products' })
   @ApiQuery({ name: 'q', required: true, description: 'Search query' })
+  @ApiQuery({
+    name: 'categoria',
+    required: false,
+    description: 'Filter by category (e.g., "epp")',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number (starts at 1)',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page',
+    type: Number,
+  })
   @ApiResponse({
     status: 200,
     description: 'Search results retrieved successfully',
-    type: [ProductResponseDto],
   })
-  search(@Query('q') query: string): Promise<ProductResponseDto[]> {
-    return this.inventoryService.findAll(query);
+  async search(
+    @Query('q') query: string,
+    @Query('categoria') categoria?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<{
+    data: ProductResponseDto[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 100;
+    return this.inventoryService.findAll(query, categoria, pageNum, limitNum);
   }
 
   @Get('products/code/:codigo')
