@@ -83,6 +83,11 @@ export class MovementsController {
   @ApiOperation({ summary: 'Get all entry movements' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
   @ApiQuery({
+    name: 'categoria',
+    required: false,
+    description: 'Filter by product category (e.g., "EPP")',
+  })
+  @ApiQuery({
     name: 'startDate',
     required: false,
     description: 'Start date filter (YYYY-MM-DD)',
@@ -110,6 +115,7 @@ export class MovementsController {
   })
   async findAllEntries(
     @Query('q') search?: string,
+    @Query('categoria') categoria?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('page') page?: string,
@@ -127,6 +133,7 @@ export class MovementsController {
     const limitNum = limit ? parseInt(limit, 10) : 100;
     return this.movementsService.findAllEntries(
       search,
+      categoria,
       startDate,
       endDate,
       pageNum,
@@ -138,6 +145,11 @@ export class MovementsController {
   @RequirePermissions(Permission.MOVEMENTS_READ)
   @ApiOperation({ summary: 'Get all exit movements' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
+  @ApiQuery({
+    name: 'categoria',
+    required: false,
+    description: 'Filter by product category (e.g., "EPP")',
+  })
   @ApiQuery({
     name: 'startDate',
     required: false,
@@ -166,6 +178,7 @@ export class MovementsController {
   })
   async findAllExits(
     @Query('q') search?: string,
+    @Query('categoria') categoria?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('page') page?: string,
@@ -183,6 +196,7 @@ export class MovementsController {
     const limitNum = limit ? parseInt(limit, 10) : 100;
     return this.movementsService.findAllExits(
       search,
+      categoria,
       startDate,
       endDate,
       pageNum,

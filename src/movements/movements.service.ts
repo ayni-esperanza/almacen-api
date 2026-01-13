@@ -82,6 +82,7 @@ export class MovementsService {
 
   async findAllEntries(
     search?: string,
+    categoria?: string,
     startDate?: string,
     endDate?: string,
     page: number = 1,
@@ -98,6 +99,10 @@ export class MovementsService {
     const where: any = {
       deletedAt: null, // SOLO ACTIVOS
     };
+
+    if (categoria) {
+      where.categoria = { equals: categoria, mode: 'insensitive' };
+    }
 
     if (search) {
       where.OR = [
@@ -168,6 +173,7 @@ export class MovementsService {
 
   async findAllExits(
     search?: string,
+    categoria?: string,
     startDate?: string,
     endDate?: string,
     page: number = 1,
@@ -184,6 +190,10 @@ export class MovementsService {
     const where: any = {
       deletedAt: null, // SOLO ACTIVOS
     };
+
+    if (categoria) {
+      where.categoria = { equals: categoria, mode: 'insensitive' };
+    }
 
     if (search) {
       where.OR = [
@@ -480,8 +490,8 @@ export class MovementsService {
     exits: MovementExitResponseDto[];
   }> {
     const [entriesResult, exitsResult] = await Promise.all([
-      this.findAllEntries(query, undefined, undefined, 1, 1000),
-      this.findAllExits(query, undefined, undefined, 1, 1000),
+      this.findAllEntries(query, undefined, undefined, undefined, 1, 1000),
+      this.findAllExits(query, undefined, undefined, undefined, 1, 1000),
     ]);
 
     return {
