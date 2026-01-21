@@ -41,7 +41,7 @@ export class ProductResponseDto {
   };
 
   @ApiPropertyOptional({ example: 'WD-40', description: 'Product brand' })
-  marca?: string;
+  marca?: string | null;
 
   @ApiProperty({ example: 12.0, description: 'Total cost' })
   costoTotal: number;
@@ -50,7 +50,13 @@ export class ProductResponseDto {
     example: 'Herramientas',
     description: 'Product category',
   })
-  categoria?: string;
+  categoria?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'OC-2025-001',
+    description: 'Orden de Compra',
+  })
+  oc?: string | null;
 
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;
