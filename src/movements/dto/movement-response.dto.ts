@@ -29,7 +29,13 @@ export class MovementEntryResponseDto {
   area?: string;
 
   @ApiPropertyOptional({ example: 'EPP', description: 'Product category' })
-  categoria?: string;
+  categoria?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'OC-2025-001',
+    description: 'Orden de Compra',
+  })
+  oc?: string | null;
 
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;
@@ -72,7 +78,12 @@ export class MovementExitResponseDto {
   })
   proyecto?: string;
   @ApiPropertyOptional({ example: 'EPP', description: 'Product category' })
-  categoria?: string;
+  categoria?: string | null;
+  @ApiPropertyOptional({
+    example: 'OC-2025-001',
+    description: 'Orden de Compra',
+  })
+  oc?: string | null;
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;
 
