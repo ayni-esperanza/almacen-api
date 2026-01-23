@@ -51,7 +51,6 @@ model Product {
   marca            String?
   costoTotal       Float     @default(0)
   categoria        String?
-  oc               String?   // Orden de Compra
   alertaVista      Boolean   @default(false)
   alertaVistaFecha DateTime?
   deletedAt        DateTime? // Null = Activo, Fecha = Eliminado
@@ -77,7 +76,6 @@ model MovementEntry {
   responsable    String?
   area           String?
   categoria      String?
-  oc             String?   // Orden de Compra
   
   deletedAt      DateTime?
   
@@ -101,7 +99,6 @@ model MovementExit {
   area           String?
   proyecto       String?
   categoria      String?
-  oc             String?   // Orden de Compra
   
   deletedAt      DateTime?
   

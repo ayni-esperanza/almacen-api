@@ -30,12 +30,11 @@ export class MovementsService {
       createEntryDto.codigoProducto,
     );
 
-    // Create the entry with product category and OC
+    // Create the entry with product category
     const entry = await this.prisma.movementEntry.create({
       data: {
         ...createEntryDto,
         categoria: product.categoria || undefined,
-        oc: product.oc || undefined,
       },
     });
 
@@ -63,12 +62,11 @@ export class MovementsService {
       );
     }
 
-    // Create the exit with product category and OC
+    // Create the exit with product category
     const exit = await this.prisma.movementExit.create({
       data: {
         ...createExitDto,
         categoria: product.categoria || undefined,
-        oc: product.oc || undefined,
       },
     });
 

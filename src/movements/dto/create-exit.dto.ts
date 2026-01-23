@@ -61,12 +61,4 @@ export class CreateExitDto {
   @IsString()
   @IsOptional()
   categoria?: string;
-
-  @ApiPropertyOptional({
-    example: 'OC-2025-001',
-    description: 'Orden de Compra',
-  })
-  @IsString()
-  @IsOptional()
-  oc?: string;
 }
