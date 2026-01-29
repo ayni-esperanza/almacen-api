@@ -176,22 +176,12 @@ model Categoria {
 }
 
 // === PURCHASE ORDER MODELS ===
-enum PurchaseOrderStatus {
-  BORRADOR
-  ENVIADA
-  RECIBIDA
-  CANCELADA
-}
-
 model PurchaseOrder {
   id             Int                 @id @default(autoincrement())
   codigo         String              @unique
   fecha          String              // Format: "DD/MM/YYYY"
-  proveedor      String?
-  estado         PurchaseOrderStatus @default(BORRADOR)
   cantidad       Int                 @default(0) // Suma de cantidades de productos
   costo          Float               @default(0) // Suma de costos de productos
-  observaciones  String?
   deletedAt      DateTime?
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt

@@ -1,21 +1,8 @@
-import { IsString, IsOptional, IsEnum, IsNumber, Min } from 'class-validator';
-import { PurchaseOrderStatus } from '@prisma/client';
+import { IsString, IsNumber, Min } from 'class-validator';
 
 export class CreatePurchaseOrderDto {
   @IsString()
   fecha: string; // Format: "DD/MM/YYYY"
-
-  @IsString()
-  @IsOptional()
-  proveedor?: string;
-
-  @IsEnum(PurchaseOrderStatus)
-  @IsOptional()
-  estado?: PurchaseOrderStatus;
-
-  @IsString()
-  @IsOptional()
-  observaciones?: string;
 }
 
 export class CreatePurchaseOrderProductDto {
