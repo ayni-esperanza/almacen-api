@@ -174,3 +174,52 @@ model Categoria {
 
   @@map("categorias")
 }
+
+// === PURCHASE ORDER MODELS ===
+enum PurchaseOrderStatus {
+  BORRADOR
+  ENVIADA
+  RECIBIDA
+  CANCELADA
+}
+
+model PurchaseOrder {
+  id             Int                 @id @default(autoincrement())
+  codigo         String              @unique
+  fecha          String              // Format: "DD/MM/YYYY"
+  proveedor      String?
+  estado         PurchaseOrderStatus @default(BORRADOR)
+  cantidad       Int                 @default(0) // Suma de cantidades de productos
+  costo          Float               @default(0) // Suma de costos de productos
+  observaciones  String?
+  deletedAt      DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  // Relations
+  productos      PurchaseOrderProduct[]
+
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderProduct {
+  id               Int      @id @default(autoincrement())
+  purchaseOrderId  Int
+  fecha            String   // Format: "DD/MM/YYYY"
+  codigo           String   // Puede ser código de producto o vacío para productos no registrados
+  nombre           String
+  area             String
+  proyecto         String
+  responsable      String
+  cantidad         Int
+  costoUnitario    Float
+  subtotal         Float    // cantidad * costoUnitario
+  deletedAt        DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
+  @@map("purchase_order_products")
+}

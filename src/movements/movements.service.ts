@@ -14,6 +14,14 @@ import {
   MovementEntryResponseDto,
   MovementExitResponseDto,
 } from './dto/movement-response.dto';
+import {
+  CreatePurchaseOrderDto,
+  CreatePurchaseOrderProductDto,
+} from './dto/create-purchase-order.dto';
+import {
+  UpdatePurchaseOrderDto,
+  UpdatePurchaseOrderProductDto,
+} from './dto/update-purchase-order.dto';
 
 @Injectable()
 export class MovementsService {
@@ -619,5 +627,373 @@ export class MovementsService {
     }
 
     return { entriesUpdated, exitsUpdated, errors };
+  }
+  /**
+   * Generate a unique purchase order code
+   */
+  private async generatePurchaseOrderCode(): Promise<string> {
+    const count = await this.prisma.purchaseOrder.count();
+    return `OC-${String(count + 1).padStart(4, '0')}`;
+  }
+
+  /**
+   * Create a new purchase order
+   */
+  async createPurchaseOrder(createPurchaseOrderDto: CreatePurchaseOrderDto) {
+    const codigo = await this.generatePurchaseOrderCode();
+
+    return this.prisma.purchaseOrder.create({
+      data: {
+        codigo,
+        ...createPurchaseOrderDto,
+      },
+    });
+  }
+
+  /**
+   * Get all purchase orders with pagination and filters
+   */
+  async findAllPurchaseOrders(
+    search?: string,
+    startDate?: string,
+    endDate?: string,
+    page: number = 1,
+    limit: number = 100,
+  ) {
+    const where: any = {
+      deletedAt: null,
+    };
+
+    if (search) {
+      where.OR = [
+        { codigo: { contains: search, mode: 'insensitive' } },
+        { proveedor: { contains: search, mode: 'insensitive' } },
+        { observaciones: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Filter by date range
+    if (startDate || endDate) {
+      const allOrders = await this.prisma.purchaseOrder.findMany({
+        where,
+        include: { productos: { where: { deletedAt: null } } },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const filteredOrders = allOrders.filter((order) => {
+        const [day, month, year] = order.fecha.split('/');
+        const orderDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+        if (startDate && orderDate < startDate) return false;
+        if (endDate && orderDate > endDate) return false;
+        return true;
+      });
+
+      const total = filteredOrders.length;
+      const totalPages = Math.ceil(total / limit);
+      const skip = (page - 1) * limit;
+      const paginatedOrders = filteredOrders.slice(skip, skip + limit);
+
+      return {
+        data: paginatedOrders,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
+      };
+    }
+
+    // No date filters, use native pagination
+    const [orders, total] = await Promise.all([
+      this.prisma.purchaseOrder.findMany({
+        where,
+        include: { productos: { where: { deletedAt: null } } },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.purchaseOrder.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+  }
+
+  /**
+   * Get a single purchase order by ID
+   */
+  async findOnePurchaseOrder(id: number) {
+    const order = await this.prisma.purchaseOrder.findFirst({
+      where: { id, deletedAt: null },
+      include: { productos: { where: { deletedAt: null } } },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Purchase order with ID ${id} not found`);
+    }
+
+    return order;
+  }
+
+  /**
+   * Update a purchase order
+   */
+  async updatePurchaseOrder(
+    id: number,
+    updatePurchaseOrderDto: UpdatePurchaseOrderDto,
+  ) {
+    await this.findOnePurchaseOrder(id);
+
+    return this.prisma.purchaseOrder.update({
+      where: { id },
+      data: updatePurchaseOrderDto,
+      include: { productos: { where: { deletedAt: null } } },
+    });
+  }
+
+  /**
+   * Soft delete a purchase order
+   */
+  async removePurchaseOrder(id: number) {
+    await this.findOnePurchaseOrder(id);
+
+    return this.prisma.purchaseOrder.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  /**
+   * Add a product to a purchase order
+   */
+  async addProductToPurchaseOrder(
+    purchaseOrderId: number,
+    createProductDto: CreatePurchaseOrderProductDto,
+  ) {
+    await this.findOnePurchaseOrder(purchaseOrderId);
+
+    const subtotal = createProductDto.cantidad * createProductDto.costoUnitario;
+
+    // Check if product exists in inventory and has enough stock
+    if (createProductDto.codigo) {
+      try {
+        const inventoryProduct = await this.inventoryService.findByCode(
+          createProductDto.codigo,
+        );
+
+        // Verify there's enough stock
+        if (inventoryProduct.stockActual < createProductDto.cantidad) {
+          throw new BadRequestException(
+            `Stock insuficiente. Disponible: ${inventoryProduct.stockActual}, Solicitado: ${createProductDto.cantidad}`,
+          );
+        }
+
+        // Deduct from stock (similar to exit movement)
+        await this.inventoryService.updateStock(
+          createProductDto.codigo,
+          0,
+          createProductDto.cantidad,
+        );
+      } catch (error) {
+        // If product doesn't exist in inventory, that's OK - it's a new product for the order
+        if (!(error instanceof NotFoundException)) {
+          throw error;
+        }
+      }
+    }
+
+    const product = await this.prisma.purchaseOrderProduct.create({
+      data: {
+        purchaseOrderId,
+        ...createProductDto,
+        subtotal,
+      },
+    });
+
+    // Update order totals
+    await this.updatePurchaseOrderTotals(purchaseOrderId);
+
+    return product;
+  }
+
+  /**
+   * Get all products in a purchase order
+   */
+  async findAllPurchaseOrderProducts(purchaseOrderId: number) {
+    await this.findOnePurchaseOrder(purchaseOrderId);
+
+    return this.prisma.purchaseOrderProduct.findMany({
+      where: {
+        purchaseOrderId,
+        deletedAt: null,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  /**
+   * Update a product in a purchase order
+   */
+  async updatePurchaseOrderProduct(
+    purchaseOrderId: number,
+    productId: number,
+    updateProductDto: UpdatePurchaseOrderProductDto,
+  ) {
+    await this.findOnePurchaseOrder(purchaseOrderId);
+
+    const product = await this.prisma.purchaseOrderProduct.findFirst({
+      where: {
+        id: productId,
+        purchaseOrderId,
+        deletedAt: null,
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException(
+        `Product with ID ${productId} not found in purchase order ${purchaseOrderId}`,
+      );
+    }
+
+    // Calculate new values
+    const newCantidad = updateProductDto.cantidad ?? product.cantidad;
+    const costoUnitario =
+      updateProductDto.costoUnitario ?? product.costoUnitario;
+    const subtotal = newCantidad * costoUnitario;
+
+    // If quantity changed and product exists in inventory, adjust stock
+    if (
+      updateProductDto.cantidad !== undefined &&
+      updateProductDto.cantidad !== product.cantidad &&
+      product.codigo
+    ) {
+      try {
+        const inventoryProduct = await this.inventoryService.findByCode(
+          product.codigo,
+        );
+
+        const quantityDifference = newCantidad - product.cantidad;
+
+        if (quantityDifference > 0) {
+          // Increased quantity - need more stock
+          if (inventoryProduct.stockActual < quantityDifference) {
+            throw new BadRequestException(
+              `Stock insuficiente para incrementar cantidad. Disponible: ${inventoryProduct.stockActual}, Necesario: ${quantityDifference}`,
+            );
+          }
+          // Deduct additional quantity
+          await this.inventoryService.updateStock(
+            product.codigo,
+            0,
+            quantityDifference,
+          );
+        } else if (quantityDifference < 0) {
+          // Decreased quantity - return to stock
+          await this.inventoryService.updateStock(
+            product.codigo,
+            Math.abs(quantityDifference),
+            0,
+          );
+        }
+      } catch (error) {
+        // If product doesn't exist in inventory, skip stock update
+        if (!(error instanceof NotFoundException)) {
+          throw error;
+        }
+      }
+    }
+
+    const updatedProduct = await this.prisma.purchaseOrderProduct.update({
+      where: { id: productId },
+      data: {
+        ...updateProductDto,
+        subtotal,
+      },
+    });
+
+    // Update order totals
+    await this.updatePurchaseOrderTotals(purchaseOrderId);
+
+    return updatedProduct;
+  }
+
+  /**
+   * Soft delete a product from a purchase order
+   */
+  async removePurchaseOrderProduct(purchaseOrderId: number, productId: number) {
+    await this.findOnePurchaseOrder(purchaseOrderId);
+
+    const product = await this.prisma.purchaseOrderProduct.findFirst({
+      where: {
+        id: productId,
+        purchaseOrderId,
+        deletedAt: null,
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException(
+        `Product with ID ${productId} not found in purchase order ${purchaseOrderId}`,
+      );
+    }
+
+    // If product exists in inventory, return quantity to stock
+    if (product.codigo) {
+      try {
+        await this.inventoryService.findByCode(product.codigo);
+        // Revert the stock (add back the quantity)
+        await this.inventoryService.updateStock(
+          product.codigo,
+          product.cantidad,
+          0,
+        );
+      } catch (error) {
+        // If product doesn't exist in inventory, skip stock update
+        if (!(error instanceof NotFoundException)) {
+          throw error;
+        }
+      }
+    }
+
+    await this.prisma.purchaseOrderProduct.update({
+      where: { id: productId },
+      data: { deletedAt: new Date() },
+    });
+
+    // Update order totals
+    await this.updatePurchaseOrderTotals(purchaseOrderId);
+
+    return { message: 'Product deleted successfully' };
+  }
+
+  /**
+   * Update purchase order totals based on its products
+   */
+  private async updatePurchaseOrderTotals(purchaseOrderId: number) {
+    const products = await this.prisma.purchaseOrderProduct.findMany({
+      where: {
+        purchaseOrderId,
+        deletedAt: null,
+      },
+    });
+
+    const cantidad = products.reduce((sum, p) => sum + p.cantidad, 0);
+    const costo = products.reduce((sum, p) => sum + p.subtotal, 0);
+
+    await this.prisma.purchaseOrder.update({
+      where: { id: purchaseOrderId },
+      data: { cantidad, costo },
+    });
   }
 }
