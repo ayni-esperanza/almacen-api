@@ -1,8 +1,12 @@
-import { IsString, IsNumber, Min } from 'class-validator';
+import { IsString, IsNumber, Min, IsOptional } from 'class-validator';
 
 export class CreatePurchaseOrderDto {
   @IsString()
   fecha: string; // Format: "DD/MM/YYYY"
+
+  @IsString()
+  @IsOptional()
+  codigo?: string;
 }
 
 export class CreatePurchaseOrderProductDto {
