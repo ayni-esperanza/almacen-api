@@ -583,24 +583,24 @@ export class MovementsService {
     areas: string[];
     responsables: string[];
   }> {
-    const [areas, responsables] = await Promise.all([
-      this.prisma.movementEntry.findMany({
-        where: { deletedAt: null, area: { not: null } },
-        select: { area: true },
-        distinct: ['area'],
-        orderBy: { area: 'asc' },
-      }),
-      this.prisma.movementEntry.findMany({
-        where: { deletedAt: null, responsable: { not: null } },
-        select: { responsable: true },
-        distinct: ['responsable'],
-        orderBy: { responsable: 'asc' },
-      }),
+    const [areasRaw, responsablesRaw] = await Promise.all([
+      this.prisma.$queryRaw<{ area: string }[]>`
+        SELECT DISTINCT UPPER(TRIM(area)) as area
+        FROM "movement_entries"
+        WHERE "deletedAt" IS NULL AND area IS NOT NULL AND TRIM(area) <> ''
+        ORDER BY area ASC
+      `,
+      this.prisma.$queryRaw<{ responsable: string }[]>`
+        SELECT DISTINCT UPPER(TRIM(responsable)) as responsable
+        FROM "movement_entries"
+        WHERE "deletedAt" IS NULL AND responsable IS NOT NULL AND TRIM(responsable) <> ''
+        ORDER BY responsable ASC
+      `,
     ]);
 
     return {
-      areas: areas.map((e) => e.area!).filter(Boolean),
-      responsables: responsables.map((e) => e.responsable!).filter(Boolean),
+      areas: areasRaw.map((e) => e.area),
+      responsables: responsablesRaw.map((e) => e.responsable),
     };
   }
 
@@ -609,31 +609,31 @@ export class MovementsService {
     proyectos: string[];
     responsables: string[];
   }> {
-    const [areas, proyectos, responsables] = await Promise.all([
-      this.prisma.movementExit.findMany({
-        where: { deletedAt: null, area: { not: null } },
-        select: { area: true },
-        distinct: ['area'],
-        orderBy: { area: 'asc' },
-      }),
-      this.prisma.movementExit.findMany({
-        where: { deletedAt: null, proyecto: { not: null } },
-        select: { proyecto: true },
-        distinct: ['proyecto'],
-        orderBy: { proyecto: 'asc' },
-      }),
-      this.prisma.movementExit.findMany({
-        where: { deletedAt: null, responsable: { not: null } },
-        select: { responsable: true },
-        distinct: ['responsable'],
-        orderBy: { responsable: 'asc' },
-      }),
+    const [areasRaw, proyectosRaw, responsablesRaw] = await Promise.all([
+      this.prisma.$queryRaw<{ area: string }[]>`
+        SELECT DISTINCT UPPER(TRIM(area)) as area
+        FROM "movement_exits"
+        WHERE "deletedAt" IS NULL AND area IS NOT NULL AND TRIM(area) <> ''
+        ORDER BY area ASC
+      `,
+      this.prisma.$queryRaw<{ proyecto: string }[]>`
+        SELECT DISTINCT UPPER(TRIM(proyecto)) as proyecto
+        FROM "movement_exits"
+        WHERE "deletedAt" IS NULL AND proyecto IS NOT NULL AND TRIM(proyecto) <> ''
+        ORDER BY proyecto ASC
+      `,
+      this.prisma.$queryRaw<{ responsable: string }[]>`
+        SELECT DISTINCT UPPER(TRIM(responsable)) as responsable
+        FROM "movement_exits"
+        WHERE "deletedAt" IS NULL AND responsable IS NOT NULL AND TRIM(responsable) <> ''
+        ORDER BY responsable ASC
+      `,
     ]);
 
     return {
-      areas: areas.map((e) => e.area!).filter(Boolean),
-      proyectos: proyectos.map((e) => e.proyecto!).filter(Boolean),
-      responsables: responsables.map((e) => e.responsable!).filter(Boolean),
+      areas: areasRaw.map((e) => e.area),
+      proyectos: proyectosRaw.map((e) => e.proyecto),
+      responsables: responsablesRaw.map((e) => e.responsable),
     };
   }
 
