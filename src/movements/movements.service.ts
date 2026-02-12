@@ -95,6 +95,8 @@ export class MovementsService {
     endDate?: string,
     page: number = 1,
     limit: number = 100,
+    area?: string,
+    responsable?: string,
   ): Promise<{
     data: MovementEntryResponseDto[];
     pagination: {
@@ -110,6 +112,14 @@ export class MovementsService {
 
     if (categoria) {
       where.categoria = { equals: categoria, mode: 'insensitive' };
+    }
+
+    if (area) {
+      where.area = { equals: area, mode: 'insensitive' };
+    }
+
+    if (responsable) {
+      where.responsable = { equals: responsable, mode: 'insensitive' };
     }
 
     if (search) {
@@ -186,6 +196,9 @@ export class MovementsService {
     endDate?: string,
     page: number = 1,
     limit: number = 100,
+    area?: string,
+    proyecto?: string,
+    responsable?: string,
   ): Promise<{
     data: MovementExitResponseDto[];
     pagination: {
@@ -201,6 +214,18 @@ export class MovementsService {
 
     if (categoria) {
       where.categoria = { equals: categoria, mode: 'insensitive' };
+    }
+
+    if (area) {
+      where.area = { equals: area, mode: 'insensitive' };
+    }
+
+    if (proyecto) {
+      where.proyecto = { equals: proyecto, mode: 'insensitive' };
+    }
+
+    if (responsable) {
+      where.responsable = { equals: responsable, mode: 'insensitive' };
     }
 
     if (search) {
@@ -552,6 +577,62 @@ export class MovementsService {
       select: { nombre: true },
       orderBy: { nombre: 'asc' },
     });
+  }
+
+  async getEntryFilterOptions(): Promise<{
+    areas: string[];
+    responsables: string[];
+  }> {
+    const entries = await this.prisma.movementEntry.findMany({
+      where: { deletedAt: null },
+      select: { area: true, responsable: true },
+    });
+
+    const areasSet = new Set<string>();
+    const responsablesSet = new Set<string>();
+
+    entries.forEach((e) => {
+      if (e.area) areasSet.add(e.area);
+      if (e.responsable) responsablesSet.add(e.responsable);
+    });
+
+    return {
+      areas: Array.from(areasSet).sort((a, b) => a.localeCompare(b, 'es')),
+      responsables: Array.from(responsablesSet).sort((a, b) =>
+        a.localeCompare(b, 'es'),
+      ),
+    };
+  }
+
+  async getExitFilterOptions(): Promise<{
+    areas: string[];
+    proyectos: string[];
+    responsables: string[];
+  }> {
+    const exits = await this.prisma.movementExit.findMany({
+      where: { deletedAt: null },
+      select: { area: true, proyecto: true, responsable: true },
+    });
+
+    const areasSet = new Set<string>();
+    const proyectosSet = new Set<string>();
+    const responsablesSet = new Set<string>();
+
+    exits.forEach((e) => {
+      if (e.area) areasSet.add(e.area);
+      if (e.proyecto) proyectosSet.add(e.proyecto);
+      if (e.responsable) responsablesSet.add(e.responsable);
+    });
+
+    return {
+      areas: Array.from(areasSet).sort((a, b) => a.localeCompare(b, 'es')),
+      proyectos: Array.from(proyectosSet).sort((a, b) =>
+        a.localeCompare(b, 'es'),
+      ),
+      responsables: Array.from(responsablesSet).sort((a, b) =>
+        a.localeCompare(b, 'es'),
+      ),
+    };
   }
 
   async createArea(nombre: string): Promise<{ nombre: string }> {

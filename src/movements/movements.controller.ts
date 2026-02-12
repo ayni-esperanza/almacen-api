@@ -106,6 +106,16 @@ export class MovementsController {
     description: 'End date filter (YYYY-MM-DD)',
   })
   @ApiQuery({
+    name: 'area',
+    required: false,
+    description: 'Filter by area',
+  })
+  @ApiQuery({
+    name: 'responsable',
+    required: false,
+    description: 'Filter by responsable',
+  })
+  @ApiQuery({
     name: 'page',
     required: false,
     description: 'Page number (starts at 1)',
@@ -126,6 +136,8 @@ export class MovementsController {
     @Query('categoria') categoria?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('area') area?: string,
+    @Query('responsable') responsable?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ): Promise<{
@@ -146,6 +158,8 @@ export class MovementsController {
       endDate,
       pageNum,
       limitNum,
+      area,
+      responsable,
     );
   }
 
@@ -169,6 +183,21 @@ export class MovementsController {
     description: 'End date filter (YYYY-MM-DD)',
   })
   @ApiQuery({
+    name: 'area',
+    required: false,
+    description: 'Filter by area',
+  })
+  @ApiQuery({
+    name: 'proyecto',
+    required: false,
+    description: 'Filter by proyecto',
+  })
+  @ApiQuery({
+    name: 'responsable',
+    required: false,
+    description: 'Filter by responsable',
+  })
+  @ApiQuery({
     name: 'page',
     required: false,
     description: 'Page number (starts at 1)',
@@ -189,6 +218,9 @@ export class MovementsController {
     @Query('categoria') categoria?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('area') area?: string,
+    @Query('proyecto') proyecto?: string,
+    @Query('responsable') responsable?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ): Promise<{
@@ -209,6 +241,9 @@ export class MovementsController {
       endDate,
       pageNum,
       limitNum,
+      area,
+      proyecto,
+      responsable,
     );
   }
 
@@ -328,6 +363,35 @@ export class MovementsController {
   })
   removeExit(@Param('id') id: string): Promise<{ message: string }> {
     return this.movementsService.removeExit(+id);
+  }
+
+  @Get('entries/filter-options')
+  @RequirePermissions(Permission.MOVEMENTS_READ)
+  @ApiOperation({ summary: 'Get distinct filter values for entry movements' })
+  @ApiResponse({
+    status: 200,
+    description: 'Filter options retrieved successfully',
+  })
+  getEntryFilterOptions(): Promise<{
+    areas: string[];
+    responsables: string[];
+  }> {
+    return this.movementsService.getEntryFilterOptions();
+  }
+
+  @Get('exits/filter-options')
+  @RequirePermissions(Permission.MOVEMENTS_READ)
+  @ApiOperation({ summary: 'Get distinct filter values for exit movements' })
+  @ApiResponse({
+    status: 200,
+    description: 'Filter options retrieved successfully',
+  })
+  getExitFilterOptions(): Promise<{
+    areas: string[];
+    proyectos: string[];
+    responsables: string[];
+  }> {
+    return this.movementsService.getExitFilterOptions();
   }
 
   @Get('areas')
