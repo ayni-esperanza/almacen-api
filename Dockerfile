@@ -1,7 +1,7 @@
 # ====================================
 # Stage 1: Dependencies
 # ====================================
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN npm ci
 # ====================================
 # Stage 2: Production Dependencies
 # ====================================
-FROM node:20-alpine AS prod-deps
+FROM node:22-alpine AS prod-deps
 
 WORKDIR /app
 
@@ -26,7 +26,7 @@ RUN npx prisma generate
 # ====================================
 # Stage 3: Builder
 # ====================================
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -39,7 +39,7 @@ RUN npm run build
 # ====================================
 # Stage 4: Runner (Producción)
 # ====================================
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
