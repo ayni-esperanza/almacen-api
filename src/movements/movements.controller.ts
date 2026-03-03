@@ -368,30 +368,48 @@ export class MovementsController {
   @Get('entries/filter-options')
   @RequirePermissions(Permission.MOVEMENTS_READ)
   @ApiOperation({ summary: 'Get distinct filter values for entry movements' })
+  @ApiQuery({
+    name: 'area',
+    required: false,
+    description: 'Filter responsables by area',
+  })
   @ApiResponse({
     status: 200,
     description: 'Filter options retrieved successfully',
   })
-  getEntryFilterOptions(): Promise<{
+  getEntryFilterOptions(@Query('area') area?: string): Promise<{
     areas: string[];
     responsables: string[];
   }> {
-    return this.movementsService.getEntryFilterOptions();
+    return this.movementsService.getEntryFilterOptions(area);
   }
 
   @Get('exits/filter-options')
   @RequirePermissions(Permission.MOVEMENTS_READ)
   @ApiOperation({ summary: 'Get distinct filter values for exit movements' })
+  @ApiQuery({
+    name: 'area',
+    required: false,
+    description: 'Filter proyectos/responsables by area',
+  })
+  @ApiQuery({
+    name: 'proyecto',
+    required: false,
+    description: 'Filter responsables by proyecto',
+  })
   @ApiResponse({
     status: 200,
     description: 'Filter options retrieved successfully',
   })
-  getExitFilterOptions(): Promise<{
+  getExitFilterOptions(
+    @Query('area') area?: string,
+    @Query('proyecto') proyecto?: string,
+  ): Promise<{
     areas: string[];
     proyectos: string[];
     responsables: string[];
   }> {
-    return this.movementsService.getExitFilterOptions();
+    return this.movementsService.getExitFilterOptions(area, proyecto);
   }
 
   @Get('areas')

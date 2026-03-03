@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../common/services/prisma.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { CreateEntryDto } from './dto/create-entry.dto';
@@ -579,10 +580,14 @@ export class MovementsService {
     });
   }
 
-  async getEntryFilterOptions(): Promise<{
+  async getEntryFilterOptions(area?: string): Promise<{
     areas: string[];
     responsables: string[];
   }> {
+    const areaClause = area
+      ? Prisma.sql`AND UPPER(TRIM(area)) = UPPER(TRIM(${area}))`
+      : Prisma.sql``;
+
     const [areasRaw, responsablesRaw] = await Promise.all([
       this.prisma.$queryRaw<{ area: string }[]>`
         SELECT DISTINCT UPPER(TRIM(area)) as area
@@ -594,6 +599,7 @@ export class MovementsService {
         SELECT DISTINCT UPPER(TRIM(responsable)) as responsable
         FROM "movement_entries"
         WHERE "deletedAt" IS NULL AND responsable IS NOT NULL AND TRIM(responsable) <> ''
+        ${areaClause}
         ORDER BY responsable ASC
       `,
     ]);
@@ -604,11 +610,21 @@ export class MovementsService {
     };
   }
 
-  async getExitFilterOptions(): Promise<{
+  async getExitFilterOptions(
+    area?: string,
+    proyecto?: string,
+  ): Promise<{
     areas: string[];
     proyectos: string[];
     responsables: string[];
   }> {
+    const areaClause = area
+      ? Prisma.sql`AND UPPER(TRIM(area)) = UPPER(TRIM(${area}))`
+      : Prisma.sql``;
+    const proyectoClause = proyecto
+      ? Prisma.sql`AND UPPER(TRIM(proyecto)) = UPPER(TRIM(${proyecto}))`
+      : Prisma.sql``;
+
     const [areasRaw, proyectosRaw, responsablesRaw] = await Promise.all([
       this.prisma.$queryRaw<{ area: string }[]>`
         SELECT DISTINCT UPPER(TRIM(area)) as area
@@ -620,12 +636,15 @@ export class MovementsService {
         SELECT DISTINCT UPPER(TRIM(proyecto)) as proyecto
         FROM "movement_exits"
         WHERE "deletedAt" IS NULL AND proyecto IS NOT NULL AND TRIM(proyecto) <> ''
+        ${areaClause}
         ORDER BY proyecto ASC
       `,
       this.prisma.$queryRaw<{ responsable: string }[]>`
         SELECT DISTINCT UPPER(TRIM(responsable)) as responsable
         FROM "movement_exits"
         WHERE "deletedAt" IS NULL AND responsable IS NOT NULL AND TRIM(responsable) <> ''
+        ${areaClause}
+        ${proyectoClause}
         ORDER BY responsable ASC
       `,
     ]);
