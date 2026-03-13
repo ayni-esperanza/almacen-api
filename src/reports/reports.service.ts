@@ -595,6 +595,16 @@ export class ReportsService {
       });
     }
 
+    if (filters.tipoReporte === 'proyecto') {
+      exits = exits.filter((exit) => {
+        const projectName = exit.proyecto?.trim();
+        if (projectName) {
+          return true;
+        }
+        return this.isProjectLabel(exit.area);
+      });
+    }
+
     return exits.map((exit) => ({
       id: exit.id,
       fecha: exit.fecha,
