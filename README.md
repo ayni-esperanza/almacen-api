@@ -1,4 +1,4 @@
-# AYNI Almacén API
+# AYNI Inventario API
 
 Sistema de Inventario AYNI - API completa para gestión de productos, movimientos, equipos y reportes desarrollada con NestJS, Prisma y PostgreSQL.
 
