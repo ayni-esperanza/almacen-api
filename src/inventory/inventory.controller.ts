@@ -125,6 +125,43 @@ export class InventoryController {
     return this.inventoryService.createArea(body.nombre);
   }
 
+  @Patch('areas/:nombre')
+  @RequirePermissions(Permission.INVENTORY_UPDATE)
+  @ApiOperation({ summary: 'Update an area' })
+  @ApiResponse({
+    status: 200,
+    description: 'Area updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Area not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Area name already exists',
+  })
+  updateArea(
+    @Param('nombre') nombre: string,
+    @Body() body: { nombre: string },
+  ): Promise<{ nombre: string }> {
+    return this.inventoryService.updateArea(nombre, body.nombre);
+  }
+
+  @Delete('areas/:nombre')
+  @RequirePermissions(Permission.INVENTORY_DELETE)
+  @ApiOperation({ summary: 'Delete an area' })
+  @ApiResponse({
+    status: 200,
+    description: 'Area deleted successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Area not found',
+  })
+  deleteArea(@Param('nombre') nombre: string): Promise<{ message: string }> {
+    return this.inventoryService.deleteArea(nombre);
+  }
+
   @Get('categorias')
   @RequirePermissions(Permission.INVENTORY_READ)
   @ApiOperation({ summary: 'Get all available categories' })
@@ -158,6 +195,45 @@ export class InventoryController {
     @Body() body: { nombre: string },
   ): Promise<{ nombre: string }> {
     return this.inventoryService.createCategoria(body.nombre);
+  }
+
+  @Patch('categorias/:nombre')
+  @RequirePermissions(Permission.INVENTORY_UPDATE)
+  @ApiOperation({ summary: 'Update a category' })
+  @ApiResponse({
+    status: 200,
+    description: 'Category updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Category not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Category name already exists',
+  })
+  updateCategoria(
+    @Param('nombre') nombre: string,
+    @Body() body: { nombre: string },
+  ): Promise<{ nombre: string }> {
+    return this.inventoryService.updateCategoria(nombre, body.nombre);
+  }
+
+  @Delete('categorias/:nombre')
+  @RequirePermissions(Permission.INVENTORY_DELETE)
+  @ApiOperation({ summary: 'Delete a category' })
+  @ApiResponse({
+    status: 200,
+    description: 'Category deleted successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Category not found',
+  })
+  deleteCategoria(
+    @Param('nombre') nombre: string,
+  ): Promise<{ message: string }> {
+    return this.inventoryService.deleteCategoria(nombre);
   }
 
   @Get('products/search')

@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../common/services/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -262,6 +263,54 @@ export class InventoryService {
     });
   }
 
+  async updateArea(
+    nombre: string,
+    nuevoNombre: string,
+  ): Promise<{ nombre: string }> {
+    const trimmed = nuevoNombre?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('El nombre del área es obligatorio');
+    }
+
+    const existing = await this.prisma.area.findFirst({
+      where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Area ${nombre} not found`);
+    }
+
+    const duplicate = await this.prisma.area.findFirst({
+      where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
+    });
+
+    if (duplicate && duplicate.id !== existing.id) {
+      throw new ConflictException(`Area ${trimmed} already exists`);
+    }
+
+    const updated = await this.prisma.area.update({
+      where: { id: existing.id },
+      data: { nombre: trimmed },
+      select: { nombre: true },
+    });
+
+    return updated;
+  }
+
+  async deleteArea(nombre: string): Promise<{ message: string }> {
+    const existing = await this.prisma.area.findFirst({
+      where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Area ${nombre} not found`);
+    }
+
+    await this.prisma.area.delete({ where: { id: existing.id } });
+
+    return { message: 'Area deleted successfully' };
+  }
+
   async getCategorias(search?: string): Promise<{ nombre: string }[]> {
     const where = search
       ? { nombre: { contains: search, mode: 'insensitive' as const } }
@@ -279,6 +328,54 @@ export class InventoryService {
       data: { nombre },
       select: { nombre: true },
     });
+  }
+
+  async updateCategoria(
+    nombre: string,
+    nuevoNombre: string,
+  ): Promise<{ nombre: string }> {
+    const trimmed = nuevoNombre?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('El nombre de la categoría es obligatorio');
+    }
+
+    const existing = await this.prisma.categoria.findFirst({
+      where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Category ${nombre} not found`);
+    }
+
+    const duplicate = await this.prisma.categoria.findFirst({
+      where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
+    });
+
+    if (duplicate && duplicate.id !== existing.id) {
+      throw new ConflictException(`Category ${trimmed} already exists`);
+    }
+
+    const updated = await this.prisma.categoria.update({
+      where: { id: existing.id },
+      data: { nombre: trimmed },
+      select: { nombre: true },
+    });
+
+    return updated;
+  }
+
+  async deleteCategoria(nombre: string): Promise<{ message: string }> {
+    const existing = await this.prisma.categoria.findFirst({
+      where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Category ${nombre} not found`);
+    }
+
+    await this.prisma.categoria.delete({ where: { id: existing.id } });
+
+    return { message: 'Category deleted successfully' };
   }
 
   async updateStock(
