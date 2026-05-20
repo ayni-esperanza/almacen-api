@@ -111,5 +111,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     // No USERS permissions
     // Allow read-only access to providers so assistant can select providers when registering products
     Permission.PROVIDERS_READ,
+    Permission.PROVIDERS_CREATE,
+    Permission.PROVIDERS_UPDATE,
+    Permission.PROVIDERS_DELETE,
   ],
 };
