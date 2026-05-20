@@ -257,8 +257,21 @@ export class InventoryService {
   }
 
   async createArea(nombre: string): Promise<{ nombre: string }> {
+    const trimmed = nombre?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('El nombre del área es obligatorio');
+    }
+
+    const duplicate = await this.prisma.area.findFirst({
+      where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
+    });
+
+    if (duplicate) {
+      throw new ConflictException(`Area "${trimmed}" already exists`);
+    }
+
     return this.prisma.area.create({
-      data: { nombre },
+      data: { nombre: trimmed },
       select: { nombre: true },
     });
   }
@@ -324,8 +337,21 @@ export class InventoryService {
   }
 
   async createCategoria(nombre: string): Promise<{ nombre: string }> {
+    const trimmed = nombre?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('El nombre de la categoría es obligatorio');
+    }
+
+    const duplicate = await this.prisma.categoria.findFirst({
+      where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
+    });
+
+    if (duplicate) {
+      throw new ConflictException(`Category "${trimmed}" already exists`);
+    }
+
     return this.prisma.categoria.create({
-      data: { nombre },
+      data: { nombre: trimmed },
       select: { nombre: true },
     });
   }
