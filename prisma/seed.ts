@@ -32,7 +32,7 @@ async function main() {
   // Crear usuario admin por defecto (configurable por variables de entorno)
   const adminData = {
     username: process.env.ADMIN_USERNAME || 'admin',
-    password: process.env.ADMIN_PASSWORD || 'admin123',
+    password: process.env.ADMIN_PASSWORD || 'admin_2026@',
     email: process.env.ADMIN_EMAIL || 'admin@ayni.com',
     firstName: process.env.ADMIN_FIRST_NAME || 'Administrador',
     lastName: process.env.ADMIN_LAST_NAME || 'Sistema',
