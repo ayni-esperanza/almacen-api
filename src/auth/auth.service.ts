@@ -340,12 +340,29 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    // Soft delete: set isActive to false instead of physically deleting
-    await this.prisma.user.update({
-      where: { id },
-      data: { isActive: false },
-    });
+    // Prevent deleting the last active manager
+    if (existingUser.role === 'GERENTE' && existingUser.isActive) {
+      const activeManagers = await this.prisma.user.count({
+        where: {
+          role: 'GERENTE',
+          isActive: true,
+          id: { not: id },
+        },
+      });
 
-    return { message: 'User deactivated successfully' };
+      if (activeManagers === 0) {
+        throw new BadRequestException(
+          'No se puede eliminar al último gerente activo',
+        );
+      }
+    }
+
+    if (existingUser.avatarUrl) {
+      await this.uploadService.deleteImage(existingUser.avatarUrl);
+    }
+
+    await this.prisma.user.delete({ where: { id } });
+
+    return { message: 'User deleted successfully' };
   }
 }

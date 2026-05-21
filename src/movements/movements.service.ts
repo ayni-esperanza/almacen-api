@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../common/services/prisma.service';
@@ -657,10 +658,225 @@ export class MovementsService {
   }
 
   async createArea(nombre: string): Promise<{ nombre: string }> {
+    const trimmed = nombre?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('El nombre del área es obligatorio');
+    }
+
+    const duplicate = await this.prisma.area.findFirst({
+      where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
+    });
+
+    if (duplicate) {
+      throw new ConflictException(`Area "${trimmed}" already exists`);
+    }
+
     return this.prisma.area.create({
-      data: { nombre },
+      data: { nombre: trimmed },
       select: { nombre: true },
     });
+  }
+
+  async updateArea(
+    nombre: string,
+    nuevoNombre: string,
+  ): Promise<{ nombre: string }> {
+    const trimmed = nuevoNombre?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('El nombre del área es obligatorio');
+    }
+
+    const existing = await this.prisma.area.findFirst({
+      where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Area ${nombre} not found`);
+    }
+
+    const duplicate = await this.prisma.area.findFirst({
+      where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
+    });
+
+    if (duplicate && duplicate.id !== existing.id) {
+      throw new ConflictException(`Area ${trimmed} already exists`);
+    }
+
+    return this.prisma.area.update({
+      where: { id: existing.id },
+      data: { nombre: trimmed },
+      select: { nombre: true },
+    });
+  }
+
+  async deleteArea(nombre: string): Promise<{ message: string }> {
+    const existing = await this.prisma.area.findFirst({
+      where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Area ${nombre} not found`);
+    }
+
+    await this.prisma.area.delete({ where: { id: existing.id } });
+
+    return { message: 'Area deleted successfully' };
+  }
+
+  async getEmpresas(search?: string): Promise<{ nombre: string }[]> {
+    const where = search
+      ? { nombre: { contains: search, mode: 'insensitive' as const } }
+      : {};
+
+    return this.prisma.empresa.findMany({
+      where,
+      select: { nombre: true },
+      orderBy: { nombre: 'asc' },
+    });
+  }
+
+  async createEmpresa(nombre: string): Promise<{ nombre: string }> {
+    const trimmed = nombre?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('El nombre de la empresa es obligatorio');
+    }
+
+    const duplicate = await this.prisma.empresa.findFirst({
+      where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
+    });
+
+    if (duplicate) {
+      throw new ConflictException(`Empresa "${trimmed}" already exists`);
+    }
+
+    return this.prisma.empresa.create({
+      data: { nombre: trimmed },
+      select: { nombre: true },
+    });
+  }
+
+  async updateEmpresa(
+    nombre: string,
+    nuevoNombre: string,
+  ): Promise<{ nombre: string }> {
+    const trimmed = nuevoNombre?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('El nombre de la empresa es obligatorio');
+    }
+
+    const existing = await this.prisma.empresa.findFirst({
+      where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Empresa ${nombre} not found`);
+    }
+
+    const duplicate = await this.prisma.empresa.findFirst({
+      where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
+    });
+
+    if (duplicate && duplicate.id !== existing.id) {
+      throw new ConflictException(`Empresa ${trimmed} already exists`);
+    }
+
+    return this.prisma.empresa.update({
+      where: { id: existing.id },
+      data: { nombre: trimmed },
+      select: { nombre: true },
+    });
+  }
+
+  async deleteEmpresa(nombre: string): Promise<{ message: string }> {
+    const existing = await this.prisma.empresa.findFirst({
+      where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Empresa ${nombre} not found`);
+    }
+
+    await this.prisma.empresa.delete({ where: { id: existing.id } });
+
+    return { message: 'Empresa deleted successfully' };
+  }
+
+  async getProyectos(search?: string): Promise<{ nombre: string }[]> {
+    const where = search
+      ? { nombre: { contains: search, mode: 'insensitive' as const } }
+      : {};
+
+    return this.prisma.proyecto.findMany({
+      where,
+      select: { nombre: true },
+      orderBy: { nombre: 'asc' },
+    });
+  }
+
+  async createProyecto(nombre: string): Promise<{ nombre: string }> {
+    const trimmed = nombre?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('El nombre del proyecto es obligatorio');
+    }
+
+    const duplicate = await this.prisma.proyecto.findFirst({
+      where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
+    });
+
+    if (duplicate) {
+      throw new ConflictException(`Proyecto "${trimmed}" already exists`);
+    }
+
+    return this.prisma.proyecto.create({
+      data: { nombre: trimmed },
+      select: { nombre: true },
+    });
+  }
+
+  async updateProyecto(
+    nombre: string,
+    nuevoNombre: string,
+  ): Promise<{ nombre: string }> {
+    const trimmed = nuevoNombre?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('El nombre del proyecto es obligatorio');
+    }
+
+    const existing = await this.prisma.proyecto.findFirst({
+      where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Proyecto ${nombre} not found`);
+    }
+
+    const duplicate = await this.prisma.proyecto.findFirst({
+      where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
+    });
+
+    if (duplicate && duplicate.id !== existing.id) {
+      throw new ConflictException(`Proyecto ${trimmed} already exists`);
+    }
+
+    return this.prisma.proyecto.update({
+      where: { id: existing.id },
+      data: { nombre: trimmed },
+      select: { nombre: true },
+    });
+  }
+
+  async deleteProyecto(nombre: string): Promise<{ message: string }> {
+    const existing = await this.prisma.proyecto.findFirst({
+      where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Proyecto ${nombre} not found`);
+    }
+
+    await this.prisma.proyecto.delete({ where: { id: existing.id } });
+
+    return { message: 'Proyecto deleted successfully' };
   }
 
   /**

@@ -175,6 +175,20 @@ model Categoria {
   @@map("categorias")
 }
 
+model Empresa {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique
+
+  @@map("companies")
+}
+
+model Proyecto {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique
+
+  @@map("projects")
+}
+
 // === PURCHASE ORDER MODELS ===
 model PurchaseOrder {
   id             Int                 @id @default(autoincrement())

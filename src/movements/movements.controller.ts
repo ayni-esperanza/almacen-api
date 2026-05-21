@@ -443,6 +443,187 @@ export class MovementsController {
     return this.movementsService.createArea(body.nombre);
   }
 
+  @Patch('areas/:nombre')
+  @RequirePermissions(Permission.MOVEMENTS_UPDATE)
+  @ApiOperation({ summary: 'Update an area for movements' })
+  @ApiResponse({
+    status: 200,
+    description: 'Area updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Area not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Area name already exists',
+  })
+  updateArea(
+    @Param('nombre') nombre: string,
+    @Body() body: { nombre: string },
+  ): Promise<{ nombre: string }> {
+    return this.movementsService.updateArea(nombre, body.nombre);
+  }
+
+  @Delete('areas/:nombre')
+  @RequirePermissions(Permission.MOVEMENTS_DELETE)
+  @ApiOperation({ summary: 'Delete an area for movements' })
+  @ApiResponse({
+    status: 200,
+    description: 'Area deleted successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Area not found',
+  })
+  deleteArea(@Param('nombre') nombre: string): Promise<{ message: string }> {
+    return this.movementsService.deleteArea(nombre);
+  }
+
+  @Get('empresas')
+  @RequirePermissions(Permission.MOVEMENTS_READ)
+  @ApiOperation({ summary: 'Get all available empresas for movements' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search query for filtering empresas',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Empresas retrieved successfully',
+  })
+  getEmpresas(@Query('search') search?: string): Promise<{ nombre: string }[]> {
+    return this.movementsService.getEmpresas(search);
+  }
+
+  @Post('empresas')
+  @RequirePermissions(Permission.MOVEMENTS_CREATE)
+  @ApiOperation({ summary: 'Create a new empresa for movements' })
+  @ApiResponse({
+    status: 201,
+    description: 'Empresa created successfully',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Empresa already exists',
+  })
+  createEmpresa(@Body() body: { nombre: string }): Promise<{ nombre: string }> {
+    return this.movementsService.createEmpresa(body.nombre);
+  }
+
+  @Patch('empresas/:nombre')
+  @RequirePermissions(Permission.MOVEMENTS_UPDATE)
+  @ApiOperation({ summary: 'Update an empresa for movements' })
+  @ApiResponse({
+    status: 200,
+    description: 'Empresa updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Empresa not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Empresa name already exists',
+  })
+  updateEmpresa(
+    @Param('nombre') nombre: string,
+    @Body() body: { nombre: string },
+  ): Promise<{ nombre: string }> {
+    return this.movementsService.updateEmpresa(nombre, body.nombre);
+  }
+
+  @Delete('empresas/:nombre')
+  @RequirePermissions(Permission.MOVEMENTS_DELETE)
+  @ApiOperation({ summary: 'Delete an empresa for movements' })
+  @ApiResponse({
+    status: 200,
+    description: 'Empresa deleted successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Empresa not found',
+  })
+  deleteEmpresa(
+    @Param('nombre') nombre: string,
+  ): Promise<{ message: string }> {
+    return this.movementsService.deleteEmpresa(nombre);
+  }
+
+  @Get('proyectos')
+  @RequirePermissions(Permission.MOVEMENTS_READ)
+  @ApiOperation({ summary: 'Get all available proyectos for movements' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search query for filtering proyectos',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Proyectos retrieved successfully',
+  })
+  getProyectos(
+    @Query('search') search?: string,
+  ): Promise<{ nombre: string }[]> {
+    return this.movementsService.getProyectos(search);
+  }
+
+  @Post('proyectos')
+  @RequirePermissions(Permission.MOVEMENTS_CREATE)
+  @ApiOperation({ summary: 'Create a new proyecto for movements' })
+  @ApiResponse({
+    status: 201,
+    description: 'Proyecto created successfully',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Proyecto already exists',
+  })
+  createProyecto(
+    @Body() body: { nombre: string },
+  ): Promise<{ nombre: string }> {
+    return this.movementsService.createProyecto(body.nombre);
+  }
+
+  @Patch('proyectos/:nombre')
+  @RequirePermissions(Permission.MOVEMENTS_UPDATE)
+  @ApiOperation({ summary: 'Update a proyecto for movements' })
+  @ApiResponse({
+    status: 200,
+    description: 'Proyecto updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Proyecto not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Proyecto name already exists',
+  })
+  updateProyecto(
+    @Param('nombre') nombre: string,
+    @Body() body: { nombre: string },
+  ): Promise<{ nombre: string }> {
+    return this.movementsService.updateProyecto(nombre, body.nombre);
+  }
+
+  @Delete('proyectos/:nombre')
+  @RequirePermissions(Permission.MOVEMENTS_DELETE)
+  @ApiOperation({ summary: 'Delete a proyecto for movements' })
+  @ApiResponse({
+    status: 200,
+    description: 'Proyecto deleted successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Proyecto not found',
+  })
+  deleteProyecto(
+    @Param('nombre') nombre: string,
+  ): Promise<{ message: string }> {
+    return this.movementsService.deleteProyecto(nombre);
+  }
+
   @Post('backfill-categorias')
   @RequirePermissions(Permission.MOVEMENTS_UPDATE)
   @ApiOperation({
