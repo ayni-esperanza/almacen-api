@@ -19,6 +19,7 @@ export class UploadService {
   private readonly s3Client: S3Client;
   private readonly bucketName: string;
   private readonly publicUrl: string;
+  private readonly keyPrefix: string;
   private readonly MAX_FILE_SIZE = 6 * 1024 * 1024; // 6MB
   private readonly ALLOWED_MIME_TYPES = [
     'image/jpeg',
@@ -39,6 +40,8 @@ export class UploadService {
 
     this.bucketName = this.configService.get<string>('R2_BUCKET_NAME') || '';
     this.publicUrl = this.configService.get<string>('R2_PUBLIC_URL') || '';
+    const prefixRaw = this.configService.get<string>('R2_PREFIX') || '';
+    this.keyPrefix = prefixRaw.replace(/^\/+|\/+$/g, '');
 
     if (!accountId || !accessKeyId || !secretAccessKey || !this.bucketName) {
       this.logger.warn(
@@ -107,11 +110,12 @@ export class UploadService {
 
       // Generar nombre único para el archivo
       const fileName = `${folder}/${randomUUID()}.webp`;
+      const key = this.keyPrefix ? `${this.keyPrefix}/${fileName}` : fileName;
 
       // Subir a R2
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
-        Key: fileName,
+        Key: key,
         Body: processedImage,
         ContentType: 'image/webp',
         CacheControl: 'public, max-age=31536000', // Cache por 1 año
@@ -120,7 +124,10 @@ export class UploadService {
       await this.s3Client.send(command);
 
       // Retornar URL pública
-      const publicUrl = `${this.publicUrl}/${fileName}`;
+      const publicBaseUrl = this.keyPrefix
+        ? `${this.publicUrl}/${this.keyPrefix}`
+        : this.publicUrl;
+      const publicUrl = `${publicBaseUrl}/${fileName}`;
       this.logger.log(`Image uploaded successfully: ${publicUrl}`);
 
       return publicUrl;
