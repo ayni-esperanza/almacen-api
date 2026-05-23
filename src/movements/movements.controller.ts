@@ -193,6 +193,11 @@ export class MovementsController {
     description: 'Filter by proyecto',
   })
   @ApiQuery({
+    name: 'empresa',
+    required: false,
+    description: 'Filter by empresa',
+  })
+  @ApiQuery({
     name: 'responsable',
     required: false,
     description: 'Filter by responsable',
@@ -220,6 +225,7 @@ export class MovementsController {
     @Query('endDate') endDate?: string,
     @Query('area') area?: string,
     @Query('proyecto') proyecto?: string,
+    @Query('empresa') empresa?: string,
     @Query('responsable') responsable?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -243,6 +249,7 @@ export class MovementsController {
       limitNum,
       area,
       proyecto,
+      empresa,
       responsable,
     );
   }
@@ -397,6 +404,11 @@ export class MovementsController {
     required: false,
     description: 'Filter responsables by proyecto',
   })
+  @ApiQuery({
+    name: 'empresa',
+    required: false,
+    description: 'Filter responsables by empresa',
+  })
   @ApiResponse({
     status: 200,
     description: 'Filter options retrieved successfully',
@@ -404,12 +416,14 @@ export class MovementsController {
   getExitFilterOptions(
     @Query('area') area?: string,
     @Query('proyecto') proyecto?: string,
+    @Query('empresa') empresa?: string,
   ): Promise<{
     areas: string[];
     proyectos: string[];
+    empresas: string[];
     responsables: string[];
   }> {
-    return this.movementsService.getExitFilterOptions(area, proyecto);
+    return this.movementsService.getExitFilterOptions(area, proyecto, empresa);
   }
 
   @Get('areas')

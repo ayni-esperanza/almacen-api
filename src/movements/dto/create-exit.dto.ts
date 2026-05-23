@@ -49,6 +49,11 @@ export class CreateExitDto {
   @IsOptional()
   area?: string;
 
+  @ApiPropertyOptional({ example: 'Empresa XYZ', description: 'Company' })
+  @IsString()
+  @IsOptional()
+  empresa?: string;
+
   @ApiPropertyOptional({
     example: 'Proyecto ABC',
     description: 'Project assignment',

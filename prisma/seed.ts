@@ -3,6 +3,15 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+const requireEnv = (name: string): string => {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+
+  return value;
+};
+
 async function main() {
   // Crear áreas predeterminadas
   const areas = ['1', '2', '3', '4', '5', '6'];
@@ -29,11 +38,11 @@ async function main() {
     ? UserRole[roleInput as keyof typeof UserRole]
     : UserRole.GERENTE;
 
-  // Crear usuario admin por defecto (configurable por variables de entorno)
+  // Crear usuario admin usando credenciales obligatorias desde variables de entorno
   const adminData = {
-    username: process.env.ADMIN_USERNAME || 'admin',
-    password: process.env.ADMIN_PASSWORD || 'admin_2026@',
-    email: process.env.ADMIN_EMAIL || 'admin@ayni.com',
+    username: requireEnv('ADMIN_USERNAME'),
+    password: requireEnv('ADMIN_PASSWORD'),
+    email: process.env.ADMIN_EMAIL?.trim() || 'admin@ayni.com',
     firstName: process.env.ADMIN_FIRST_NAME || 'Administrador',
     lastName: process.env.ADMIN_LAST_NAME || 'Sistema',
     phoneNumber: process.env.ADMIN_PHONE || '+51 999888777',
@@ -44,23 +53,42 @@ async function main() {
   };
 
   const hashedPassword = await bcrypt.hash(adminData.password, 10);
-
-  await prisma.user.upsert({
+  // If admin exists, update its fields; otherwise create a new user
+  const existingAdmin = await prisma.user.findUnique({
     where: { username: adminData.username },
-    update: {},
-    create: {
-      username: adminData.username,
-      password: hashedPassword,
-      email: adminData.email,
-      firstName: adminData.firstName,
-      lastName: adminData.lastName,
-      phoneNumber: adminData.phoneNumber,
-      avatarUrl: adminData.avatarUrl,
-      role: adminData.role,
-      isActive: true,
-      isAuthenticated: false,
-    },
   });
+
+  if (existingAdmin) {
+    await prisma.user.update({
+      where: { id: existingAdmin.id },
+      data: {
+        password: hashedPassword,
+        email: adminData.email,
+        firstName: adminData.firstName,
+        lastName: adminData.lastName,
+        phoneNumber: adminData.phoneNumber,
+        avatarUrl: adminData.avatarUrl,
+        role: adminData.role,
+        isActive: true,
+        isAuthenticated: false,
+      },
+    });
+  } else {
+    await prisma.user.create({
+      data: {
+        username: adminData.username,
+        password: hashedPassword,
+        email: adminData.email,
+        firstName: adminData.firstName,
+        lastName: adminData.lastName,
+        phoneNumber: adminData.phoneNumber,
+        avatarUrl: adminData.avatarUrl,
+        role: adminData.role,
+        isActive: true,
+        isAuthenticated: false,
+      },
+    });
+  }
 }
 
 main()

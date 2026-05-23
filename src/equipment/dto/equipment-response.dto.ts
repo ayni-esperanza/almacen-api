@@ -23,6 +23,13 @@ export class EquipmentResponseDto {
   @ApiProperty({ example: 'Juan Pérez', description: 'Responsible person' })
   responsable: string;
 
+  @ApiProperty({
+    example: 'continua',
+    description: 'Tipo de registro (continua o fija)',
+    enum: ['continua', 'fija'],
+  })
+  tipo: string;
+
   @ApiProperty({ example: '25/08/2025', description: 'Exit date' })
   fechaSalida: string;
 

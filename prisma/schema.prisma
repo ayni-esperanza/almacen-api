@@ -97,6 +97,7 @@ model MovementExit {
   cantidad       Int
   responsable    String?
   area           String?
+  empresa        String?
   proyecto       String?
   categoria      String?
   
@@ -120,12 +121,18 @@ enum EstadoEquipo {
   Danado
 }
 
+enum EquipmentReportType {
+  continua
+  fija
+}
+
 model EquipmentReport {
   id                 Int          @id @default(autoincrement())
   equipo             String
   serieCodigo        String
   cantidad           Int
   estadoEquipo       EstadoEquipo
+  tipo               EquipmentReportType @default(continua)
   responsable        String
   fechaSalida        String
   horaSalida         String

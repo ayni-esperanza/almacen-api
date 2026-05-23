@@ -66,6 +66,9 @@ export class MovementExitResponseDto {
   @ApiPropertyOptional({ example: 'MECANICA', description: 'Source area' })
   area?: string;
 
+  @ApiPropertyOptional({ example: 'Empresa XYZ', description: 'Company' })
+  empresa?: string;
+
   @ApiPropertyOptional({
     example: 'Proyecto ABC',
     description: 'Project assignment',

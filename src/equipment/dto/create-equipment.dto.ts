@@ -16,6 +16,11 @@ export enum EstadoEquipo {
   Danado = 'Dañado',
 }
 
+export enum TipoRegistroEquipo {
+  Continua = 'continua',
+  Fija = 'fija',
+}
+
 export class CreateEquipmentDto {
   @ApiProperty({ example: 'Taladro Bosch', description: 'Equipment name' })
   @IsString()
@@ -44,6 +49,15 @@ export class CreateEquipmentDto {
   @IsString()
   @IsNotEmpty()
   responsable: string;
+
+  @ApiPropertyOptional({
+    enum: TipoRegistroEquipo,
+    example: TipoRegistroEquipo.Continua,
+    description: 'Tipo de registro (continua o fija)',
+  })
+  @IsOptional()
+  @IsEnum(TipoRegistroEquipo)
+  tipo?: TipoRegistroEquipo;
 
   @ApiProperty({
     example: '25/08/2025',

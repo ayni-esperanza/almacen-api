@@ -157,6 +157,7 @@ export class EquipmentService {
       cantidad: equipment.cantidad,
       estadoEquipo: this.mapEstadoEquipoToFrontend(equipment.estadoEquipo),
       responsable: equipment.responsable,
+      tipo: equipment.tipo,
       fechaSalida: equipment.fechaSalida,
       horaSalida: equipment.horaSalida,
       areaProyecto: equipment.areaProyecto,

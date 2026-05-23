@@ -200,6 +200,7 @@ export class MovementsService {
     limit: number = 100,
     area?: string,
     proyecto?: string,
+    empresa?: string,
     responsable?: string,
   ): Promise<{
     data: MovementExitResponseDto[];
@@ -226,6 +227,10 @@ export class MovementsService {
       where.proyecto = { equals: proyecto, mode: 'insensitive' };
     }
 
+    if (empresa) {
+      where.empresa = { equals: empresa, mode: 'insensitive' };
+    }
+
     if (responsable) {
       where.responsable = { equals: responsable, mode: 'insensitive' };
     }
@@ -236,6 +241,7 @@ export class MovementsService {
         { descripcion: { contains: search, mode: 'insensitive' } },
         { responsable: { contains: search, mode: 'insensitive' } },
         { proyecto: { contains: search, mode: 'insensitive' } },
+        { empresa: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -562,6 +568,7 @@ export class MovementsService {
       cantidad: exit.cantidad,
       responsable: exit.responsable || undefined,
       area: exit.area || undefined,
+      empresa: exit.empresa || undefined,
       proyecto: exit.proyecto || undefined,
       categoria: exit.categoria || undefined,
       createdAt: exit.createdAt,
@@ -614,9 +621,11 @@ export class MovementsService {
   async getExitFilterOptions(
     area?: string,
     proyecto?: string,
+    empresa?: string,
   ): Promise<{
     areas: string[];
     proyectos: string[];
+    empresas: string[];
     responsables: string[];
   }> {
     const areaClause = area
@@ -625,8 +634,12 @@ export class MovementsService {
     const proyectoClause = proyecto
       ? Prisma.sql`AND UPPER(TRIM(proyecto)) = UPPER(TRIM(${proyecto}))`
       : Prisma.sql``;
+    const empresaClause = empresa
+      ? Prisma.sql`AND UPPER(TRIM(empresa)) = UPPER(TRIM(${empresa}))`
+      : Prisma.sql``;
 
-    const [areasRaw, proyectosRaw, responsablesRaw] = await Promise.all([
+    const [areasRaw, proyectosRaw, empresasRaw, responsablesRaw] =
+      await Promise.all([
       this.prisma.$queryRaw<{ area: string }[]>`
         SELECT DISTINCT UPPER(TRIM(area)) as area
         FROM "movement_exits"
@@ -640,12 +653,21 @@ export class MovementsService {
         ${areaClause}
         ORDER BY proyecto ASC
       `,
+      this.prisma.$queryRaw<{ empresa: string }[]>`
+        SELECT DISTINCT UPPER(TRIM(empresa)) as empresa
+        FROM "movement_exits"
+        WHERE "deletedAt" IS NULL AND empresa IS NOT NULL AND TRIM(empresa) <> ''
+        ${areaClause}
+        ${proyectoClause}
+        ORDER BY empresa ASC
+      `,
       this.prisma.$queryRaw<{ responsable: string }[]>`
         SELECT DISTINCT UPPER(TRIM(responsable)) as responsable
         FROM "movement_exits"
         WHERE "deletedAt" IS NULL AND responsable IS NOT NULL AND TRIM(responsable) <> ''
         ${areaClause}
         ${proyectoClause}
+        ${empresaClause}
         ORDER BY responsable ASC
       `,
     ]);
@@ -653,6 +675,7 @@ export class MovementsService {
     return {
       areas: areasRaw.map((e) => e.area),
       proyectos: proyectosRaw.map((e) => e.proyecto),
+      empresas: empresasRaw.map((e) => e.empresa),
       responsables: responsablesRaw.map((e) => e.responsable),
     };
   }

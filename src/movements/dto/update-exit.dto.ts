@@ -46,6 +46,11 @@ export class UpdateExitDto {
   @IsOptional()
   area?: string | null;
 
+  @ApiPropertyOptional({ example: 'Empresa XYZ', description: 'Company' })
+  @IsString()
+  @IsOptional()
+  empresa?: string | null;
+
   @ApiPropertyOptional({
     example: 'Proyecto Alpha',
     description: 'Project name',
