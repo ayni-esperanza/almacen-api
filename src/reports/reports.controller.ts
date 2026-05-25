@@ -377,6 +377,11 @@ export class ReportsController {
   @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
   @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
   @ApiQuery({
+    name: 'empresa',
+    required: false,
+    description: 'Filter by company',
+  })
+  @ApiQuery({
     name: 'proyecto',
     required: false,
     description: 'Filter by project',
@@ -394,6 +399,7 @@ export class ReportsController {
     @Query('fechaInicio') fechaInicio?: string,
     @Query('fechaFin') fechaFin?: string,
     @Query('area') area?: string,
+    @Query('empresa') empresa?: string,
     @Query('proyecto') proyecto?: string,
     @Query('tipoReporte') tipoReporte?: string,
   ): Promise<any[]> {
@@ -401,6 +407,7 @@ export class ReportsController {
       fechaInicio,
       fechaFin,
       area,
+      empresa,
       proyecto,
       tipoReporte,
     };
@@ -412,6 +419,11 @@ export class ReportsController {
   @ApiQuery({ name: 'fechaInicio', required: false, description: 'Start date' })
   @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
   @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
+  @ApiQuery({
+    name: 'empresa',
+    required: false,
+    description: 'Filter by company',
+  })
   @ApiQuery({
     name: 'proyecto',
     required: false,
@@ -430,6 +442,7 @@ export class ReportsController {
     @Query('fechaInicio') fechaInicio?: string,
     @Query('fechaFin') fechaFin?: string,
     @Query('area') area?: string,
+    @Query('empresa') empresa?: string,
     @Query('proyecto') proyecto?: string,
     @Query('tipoReporte') tipoReporte?: string,
   ): Promise<any[]> {
@@ -437,6 +450,7 @@ export class ReportsController {
       fechaInicio,
       fechaFin,
       area,
+      empresa,
       proyecto,
       tipoReporte,
     };
@@ -448,6 +462,11 @@ export class ReportsController {
   @ApiQuery({ name: 'fechaInicio', required: false, description: 'Start date' })
   @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
   @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
+  @ApiQuery({
+    name: 'empresa',
+    required: false,
+    description: 'Filter by company',
+  })
   @ApiQuery({
     name: 'proyecto',
     required: false,
@@ -466,6 +485,7 @@ export class ReportsController {
     @Query('fechaInicio') fechaInicio?: string,
     @Query('fechaFin') fechaFin?: string,
     @Query('area') area?: string,
+    @Query('empresa') empresa?: string,
     @Query('proyecto') proyecto?: string,
     @Query('tipoReporte') tipoReporte?: string,
   ): Promise<any[]> {
@@ -473,6 +493,7 @@ export class ReportsController {
       fechaInicio,
       fechaFin,
       area,
+      empresa,
       proyecto,
       tipoReporte,
     };
@@ -487,6 +508,11 @@ export class ReportsController {
   @ApiQuery({ name: 'fechaInicio', required: false, description: 'Start date' })
   @ApiQuery({ name: 'fechaFin', required: false, description: 'End date' })
   @ApiQuery({ name: 'area', required: false, description: 'Filter by area' })
+  @ApiQuery({
+    name: 'empresa',
+    required: false,
+    description: 'Filter by company',
+  })
   @ApiQuery({
     name: 'proyecto',
     required: false,
@@ -521,6 +547,7 @@ export class ReportsController {
     @Query('fechaInicio') fechaInicio?: string,
     @Query('fechaFin') fechaFin?: string,
     @Query('area') area?: string,
+    @Query('empresa') empresa?: string,
     @Query('proyecto') proyecto?: string,
     @Query('tipoReporte') tipoReporte?: string,
     @Query('tipo') tipo?: string,
@@ -531,6 +558,7 @@ export class ReportsController {
       fechaInicio,
       fechaFin,
       area,
+      empresa,
       proyecto,
       tipoReporte,
     };

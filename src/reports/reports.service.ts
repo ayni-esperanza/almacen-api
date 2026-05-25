@@ -51,6 +51,56 @@ export class ReportsService {
     private pdfExportService: PdfExportService,
   ) {}
 
+  private normalizeLabel(value?: string | null): string {
+    return value?.trim().toLowerCase() ?? '';
+  }
+
+  private buildReferenceMap(values: Array<{ nombre: string }>): Map<string, string> {
+    const map = new Map<string, string>();
+    values.forEach((item) => {
+      const key = this.normalizeLabel(item.nombre);
+      if (!key) return;
+      if (!map.has(key)) {
+        map.set(key, item.nombre);
+      }
+    });
+    return map;
+  }
+
+  private mapReferenceLabel(
+    value: string | null | undefined,
+    map: Map<string, string>,
+  ): string | undefined {
+    const normalized = this.normalizeLabel(value);
+    if (!normalized) return undefined;
+    return map.get(normalized) || value?.trim();
+  }
+
+  private async getReferenceMaps(): Promise<{
+    areas: Map<string, string>;
+    empresas: Map<string, string>;
+    proyectos: Map<string, string>;
+    categorias: Map<string, string>;
+    ubicaciones: Map<string, string>;
+  }> {
+    const [areas, empresas, proyectos, categorias, ubicaciones] =
+      await Promise.all([
+        this.prisma.area.findMany({ select: { nombre: true } }),
+        this.prisma.empresa.findMany({ select: { nombre: true } }),
+        this.prisma.proyecto.findMany({ select: { nombre: true } }),
+        this.prisma.categoria.findMany({ select: { nombre: true } }),
+        this.prisma.ubicacion.findMany({ select: { nombre: true } }),
+      ]);
+
+    return {
+      areas: this.buildReferenceMap(areas),
+      empresas: this.buildReferenceMap(empresas),
+      proyectos: this.buildReferenceMap(proyectos),
+      categorias: this.buildReferenceMap(categorias),
+      ubicaciones: this.buildReferenceMap(ubicaciones),
+    };
+  }
+
   async getExitsReport(
     startDate?: string,
     endDate?: string,
@@ -331,6 +381,8 @@ export class ReportsService {
   async getStockAlerts(filters: StockAlertFilters): Promise<StockAlert[]> {
     const where: any = {};
 
+    const referenceMaps = await this.getReferenceMaps();
+
     // Aplicar filtros
     if (filters.categoria) {
       where.categoria = { contains: filters.categoria, mode: 'insensitive' };
@@ -369,8 +421,12 @@ export class ReportsService {
         nombre: product.nombre,
         stockActual: product.stockActual,
         stockMinimo,
-        ubicacion: product.ubicacion,
-        categoria: product.categoria || 'Sin categoría',
+        ubicacion:
+          this.mapReferenceLabel(product.ubicacion, referenceMaps.ubicaciones) ||
+          product.ubicacion,
+        categoria:
+          this.mapReferenceLabel(product.categoria, referenceMaps.categorias) ||
+          'Sin categoría',
         proveedor: product.provider?.name || 'Sin proveedor',
         ultimaActualizacion: product.updatedAt.toISOString().split('T')[0],
         estado,
@@ -405,6 +461,8 @@ export class ReportsService {
       return null;
     }
 
+    const referenceMaps = await this.getReferenceMaps();
+
     const stockMinimo = product.stockMinimo || 10; // Usar el stock mínimo del producto o 10 por defecto
     let estado: 'critico' | 'bajo' | 'normal' = 'normal';
 
@@ -420,8 +478,12 @@ export class ReportsService {
       nombre: product.nombre,
       stockActual: product.stockActual,
       stockMinimo,
-      ubicacion: product.ubicacion,
-      categoria: product.categoria || 'Sin categoría',
+      ubicacion:
+        this.mapReferenceLabel(product.ubicacion, referenceMaps.ubicaciones) ||
+        product.ubicacion,
+      categoria:
+        this.mapReferenceLabel(product.categoria, referenceMaps.categorias) ||
+        'Sin categoría',
       proveedor: product.provider?.name || 'Sin proveedor',
       ultimaActualizacion: product.updatedAt.toISOString().split('T')[0],
       estado,
@@ -443,6 +505,8 @@ export class ReportsService {
       return null;
     }
 
+    const referenceMaps = await this.getReferenceMaps();
+
     const stockMinimo = product.stockMinimo || 10;
     let estado: 'critico' | 'bajo' | 'normal' = 'normal';
 
@@ -458,8 +522,12 @@ export class ReportsService {
       nombre: product.nombre,
       stockActual: product.stockActual,
       stockMinimo,
-      ubicacion: product.ubicacion,
-      categoria: product.categoria || 'Sin categoría',
+      ubicacion:
+        this.mapReferenceLabel(product.ubicacion, referenceMaps.ubicaciones) ||
+        product.ubicacion,
+      categoria:
+        this.mapReferenceLabel(product.categoria, referenceMaps.categorias) ||
+        'Sin categoría',
       proveedor: product.provider?.name || 'Sin proveedor',
       ultimaActualizacion: product.updatedAt.toISOString().split('T')[0],
       estado,
@@ -505,29 +573,21 @@ export class ReportsService {
   }
 
   async getStockAlertCategories(): Promise<string[]> {
-    const products = await this.prisma.product.findMany({
-      select: { categoria: true },
-      distinct: ['categoria'],
-      where: {
-        categoria: {
-          not: null,
-        },
-      },
+    const categorias = await this.prisma.categoria.findMany({
+      select: { nombre: true },
+      orderBy: { nombre: 'asc' },
     });
 
-    return products
-      .map((p) => p.categoria)
-      .filter((c): c is string => c !== null)
-      .sort();
+    return categorias.map((c) => c.nombre);
   }
 
   async getStockAlertLocations(): Promise<string[]> {
-    const products = await this.prisma.product.findMany({
-      select: { ubicacion: true },
-      distinct: ['ubicacion'],
+    const ubicaciones = await this.prisma.ubicacion.findMany({
+      select: { nombre: true },
+      orderBy: { nombre: 'asc' },
     });
 
-    return products.map((p) => p.ubicacion).sort();
+    return ubicaciones.map((u) => u.nombre);
   }
 
   // === EXPENSE REPORTS METHODS ===
@@ -535,8 +595,14 @@ export class ReportsService {
   async getExpenseReports(filters: any): Promise<any[]> {
     const where: any = {};
 
+    const referenceMaps = await this.getReferenceMaps();
+
     if (filters.area) {
       where.area = { contains: filters.area, mode: 'insensitive' };
+    }
+
+    if (filters.empresa) {
+      where.empresa = { contains: filters.empresa, mode: 'insensitive' };
     }
 
     if (filters.proyecto) {
@@ -614,8 +680,14 @@ export class ReportsService {
       cantidad: exit.cantidad,
       total: exit.cantidad * exit.precioUnitario,
       responsable: exit.responsable,
-      area: exit.area,
-      proyecto: exit.proyecto,
+      area:
+        this.mapReferenceLabel(exit.area, referenceMaps.areas) || exit.area,
+      empresa:
+        this.mapReferenceLabel(exit.empresa, referenceMaps.empresas) ||
+        exit.empresa,
+      proyecto:
+        this.mapReferenceLabel(exit.proyecto, referenceMaps.proyectos) ||
+        exit.proyecto,
     }));
   }
 
@@ -722,6 +794,13 @@ export class ReportsService {
   }
 
   async exportExpenseReportPDF(filters: any, tipo: 'chart' | 'table' = 'table', mainChartType?: 'bar' | 'pie' | 'line', monthlyChartType?: 'bar' | 'pie' | 'line'): Promise<Buffer> {
+    const referenceMaps = await this.getReferenceMaps();
+    const normalizedFilters = {
+      ...filters,
+      area: this.mapReferenceLabel(filters.area, referenceMaps.areas),
+      empresa: this.mapReferenceLabel(filters.empresa, referenceMaps.empresas),
+      proyecto: this.mapReferenceLabel(filters.proyecto, referenceMaps.proyectos),
+    };
     const data = await this.getExpenseReports(filters);
     
     // Si es tipo chart, también obtener datos agrupados
@@ -735,7 +814,7 @@ export class ReportsService {
 
     return this.pdfExportService.generateExpenseReportPDF(
       data, 
-      filters, 
+      normalizedFilters, 
       tipo, 
       monthlyData, 
       areaData, 
@@ -1026,10 +1105,6 @@ export class ReportsService {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
-  }
-
-  private normalizeLabel(value?: string | null): string {
-    return value?.trim().toLowerCase() ?? '';
   }
 
   private isProjectLabel(value?: string | null): boolean {

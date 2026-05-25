@@ -193,6 +193,10 @@ export class PdfExportService {
       if (filters.area) {
         doc.text(`Área: ${filters.area}`, { align: 'center' });
       }
+
+      if (filters.empresa) {
+        doc.text(`Empresa: ${filters.empresa}`, { align: 'center' });
+      }
       
       if (filters.proyecto) {
         doc.text(`Proyecto: ${filters.proyecto}`, { align: 'center' });

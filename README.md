@@ -102,7 +102,7 @@ La API estará disponible en:
 - **Servidor**: <http://localhost:3000>
 - **Documentación Swagger**: <http://localhost:3000/api>
 
-## Autenticación
+## Autenticación mas na
 
 ### Credenciales por defecto
 
