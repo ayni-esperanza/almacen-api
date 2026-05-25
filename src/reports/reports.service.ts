@@ -108,7 +108,9 @@ export class ReportsService {
     responsable?: string,
     proyecto?: string,
   ): Promise<ExitReportResponseDto> {
-    const where: any = {};
+    const where: any = {
+      deletedAt: null,
+    };
 
     // Apply filters
     if (startDate || endDate) {
@@ -593,7 +595,9 @@ export class ReportsService {
   // === EXPENSE REPORTS METHODS ===
 
   async getExpenseReports(filters: any): Promise<any[]> {
-    const where: any = {};
+    const where: any = {
+      deletedAt: null,
+    };
 
     const referenceMaps = await this.getReferenceMaps();
 
@@ -661,6 +665,8 @@ export class ReportsService {
       });
     }
 
+    exits = exits.filter((exit) => !exit.deletedAt);
+
     if (filters.tipoReporte === 'proyecto') {
       exits = exits.filter((exit) => {
         const projectName = exit.proyecto?.trim();
@@ -719,6 +725,7 @@ export class ReportsService {
 
   async getAreaExpenseData(filters: any): Promise<any[]> {
     const exits = await this.getExpenseReports(filters);
+    const groupByEmpresa = filters?.tipoReporte === 'empresa';
 
     // Agrupar por área
     const areaData = new Map<
@@ -734,13 +741,15 @@ export class ReportsService {
     >();
 
     exits.forEach((exit) => {
-      const area = exit.area || 'Sin área';
+      const area = groupByEmpresa
+        ? exit.empresa || 'Sin empresa'
+        : exit.area || 'Sin área';
       let projectName = exit.proyecto;
 
       if (!projectName) {
         if (filters?.proyecto) {
           projectName = filters.proyecto;
-        } else if (this.isProjectLabel(exit.area)) {
+        } else if (!groupByEmpresa && this.isProjectLabel(exit.area)) {
           projectName = exit.area;
         }
       }
