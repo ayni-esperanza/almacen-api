@@ -244,64 +244,64 @@ export class InventoryService {
     return { message: 'Product deleted successfully (logical)' };
   }
 
-  async getAreas(search?: string): Promise<{ nombre: string }[]> {
+  async getUbicaciones(search?: string): Promise<{ nombre: string }[]> {
     const where = search
       ? { nombre: { contains: search, mode: 'insensitive' as const } }
       : {};
 
-    return this.prisma.area.findMany({
+    return this.prisma.ubicacion.findMany({
       where,
       select: { nombre: true },
       orderBy: { nombre: 'asc' },
     });
   }
 
-  async createArea(nombre: string): Promise<{ nombre: string }> {
+  async createUbicacion(nombre: string): Promise<{ nombre: string }> {
     const trimmed = nombre?.trim();
     if (!trimmed) {
-      throw new BadRequestException('El nombre del área es obligatorio');
+      throw new BadRequestException('El nombre de la ubicación es obligatorio');
     }
 
-    const duplicate = await this.prisma.area.findFirst({
+    const duplicate = await this.prisma.ubicacion.findFirst({
       where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
     });
 
     if (duplicate) {
-      throw new ConflictException(`Area "${trimmed}" already exists`);
+      throw new ConflictException(`Ubicacion "${trimmed}" already exists`);
     }
 
-    return this.prisma.area.create({
+    return this.prisma.ubicacion.create({
       data: { nombre: trimmed },
       select: { nombre: true },
     });
   }
 
-  async updateArea(
+  async updateUbicacion(
     nombre: string,
     nuevoNombre: string,
   ): Promise<{ nombre: string }> {
     const trimmed = nuevoNombre?.trim();
     if (!trimmed) {
-      throw new BadRequestException('El nombre del área es obligatorio');
+      throw new BadRequestException('El nombre de la ubicación es obligatorio');
     }
 
-    const existing = await this.prisma.area.findFirst({
+    const existing = await this.prisma.ubicacion.findFirst({
       where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
     });
 
     if (!existing) {
-      throw new NotFoundException(`Area ${nombre} not found`);
+      throw new NotFoundException(`Ubicacion ${nombre} not found`);
     }
 
-    const duplicate = await this.prisma.area.findFirst({
+    const duplicate = await this.prisma.ubicacion.findFirst({
       where: { nombre: { equals: trimmed, mode: 'insensitive' as const } },
     });
 
     if (duplicate && duplicate.id !== existing.id) {
-      throw new ConflictException(`Area ${trimmed} already exists`);
+      throw new ConflictException(`Ubicacion ${trimmed} already exists`);
     }
 
-    const updated = await this.prisma.area.update({
+    const updated = await this.prisma.ubicacion.update({
       where: { id: existing.id },
       data: { nombre: trimmed },
       select: { nombre: true },
@@ -310,18 +310,18 @@ export class InventoryService {
     return updated;
   }
 
-  async deleteArea(nombre: string): Promise<{ message: string }> {
-    const existing = await this.prisma.area.findFirst({
+  async deleteUbicacion(nombre: string): Promise<{ message: string }> {
+    const existing = await this.prisma.ubicacion.findFirst({
       where: { nombre: { equals: nombre, mode: 'insensitive' as const } },
     });
 
     if (!existing) {
-      throw new NotFoundException(`Area ${nombre} not found`);
+      throw new NotFoundException(`Ubicacion ${nombre} not found`);
     }
 
-    await this.prisma.area.delete({ where: { id: existing.id } });
+    await this.prisma.ubicacion.delete({ where: { id: existing.id } });
 
-    return { message: 'Area deleted successfully' };
+    return { message: 'Ubicacion deleted successfully' };
   }
 
   async getCategorias(search?: string): Promise<{ nombre: string }[]> {

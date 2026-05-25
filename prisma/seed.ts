@@ -23,6 +23,16 @@ async function main() {
     });
   }
 
+  // Crear ubicaciones predeterminadas para stock
+  const ubicaciones = ['ALMACEN 1', 'ALMACEN 2', 'ALMACEN 3'];
+  for (const nombre of ubicaciones) {
+    await prisma.ubicacion.upsert({
+      where: { nombre },
+      update: {},
+      create: { nombre },
+    });
+  }
+
   // Crear categorías predeterminadas
   const categorias = ['EPP', 'Equipos', 'Herramientas'];
   for (const nombre of categorias) {

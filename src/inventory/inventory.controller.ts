@@ -94,72 +94,72 @@ export class InventoryController {
     return this.inventoryService.findAll(search, categoria, pageNum, limitNum);
   }
 
-  @Get('areas')
+  @Get('ubicaciones')
   @RequirePermissions(Permission.INVENTORY_READ)
-  @ApiOperation({ summary: 'Get all available areas' })
+  @ApiOperation({ summary: 'Get all available locations' })
   @ApiQuery({
     name: 'search',
     required: false,
-    description: 'Search query for filtering areas',
+    description: 'Search query for filtering locations',
   })
   @ApiResponse({
     status: 200,
-    description: 'Areas retrieved successfully',
+    description: 'Locations retrieved successfully',
   })
-  getAreas(@Query('search') search?: string): Promise<{ nombre: string }[]> {
-    return this.inventoryService.getAreas(search);
+  getUbicaciones(@Query('search') search?: string): Promise<{ nombre: string }[]> {
+    return this.inventoryService.getUbicaciones(search);
   }
 
-  @Post('areas')
+  @Post('ubicaciones')
   @RequirePermissions(Permission.INVENTORY_CREATE)
-  @ApiOperation({ summary: 'Create a new area' })
+  @ApiOperation({ summary: 'Create a new location' })
   @ApiResponse({
     status: 201,
-    description: 'Area created successfully',
+    description: 'Location created successfully',
   })
   @ApiResponse({
     status: 409,
-    description: 'Area already exists',
+    description: 'Location already exists',
   })
-  createArea(@Body() body: { nombre: string }): Promise<{ nombre: string }> {
-    return this.inventoryService.createArea(body.nombre);
+  createUbicacion(@Body() body: { nombre: string }): Promise<{ nombre: string }> {
+    return this.inventoryService.createUbicacion(body.nombre);
   }
 
-  @Patch('areas/:nombre')
+  @Patch('ubicaciones/:nombre')
   @RequirePermissions(Permission.INVENTORY_UPDATE)
-  @ApiOperation({ summary: 'Update an area' })
+  @ApiOperation({ summary: 'Update a location' })
   @ApiResponse({
     status: 200,
-    description: 'Area updated successfully',
+    description: 'Location updated successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Area not found',
+    description: 'Location not found',
   })
   @ApiResponse({
     status: 409,
-    description: 'Area name already exists',
+    description: 'Location name already exists',
   })
-  updateArea(
+  updateUbicacion(
     @Param('nombre') nombre: string,
     @Body() body: { nombre: string },
   ): Promise<{ nombre: string }> {
-    return this.inventoryService.updateArea(nombre, body.nombre);
+    return this.inventoryService.updateUbicacion(nombre, body.nombre);
   }
 
-  @Delete('areas/:nombre')
+  @Delete('ubicaciones/:nombre')
   @RequirePermissions(Permission.INVENTORY_DELETE)
-  @ApiOperation({ summary: 'Delete an area' })
+  @ApiOperation({ summary: 'Delete a location' })
   @ApiResponse({
     status: 200,
-    description: 'Area deleted successfully',
+    description: 'Location deleted successfully',
   })
   @ApiResponse({
     status: 404,
-    description: 'Area not found',
+    description: 'Location not found',
   })
-  deleteArea(@Param('nombre') nombre: string): Promise<{ message: string }> {
-    return this.inventoryService.deleteArea(nombre);
+  deleteUbicacion(@Param('nombre') nombre: string): Promise<{ message: string }> {
+    return this.inventoryService.deleteUbicacion(nombre);
   }
 
   @Get('categorias')

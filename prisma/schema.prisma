@@ -175,6 +175,13 @@ model Area {
   @@map("areas")
 }
 
+model Ubicacion {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique
+
+  @@map("ubicaciones")
+}
+
 model Categoria {
   id     Int    @id @default(autoincrement())
   nombre String @unique
